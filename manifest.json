@@ -1,0 +1,12 @@
+{
+  "manifest_version": 2,
+  "name": "See All Tabs",
+  "version": "1.0.2.1",
+  "description": "show a list of all open tabs",
+  "author": "Lior Shtivelman",
+  "permissions": ["tabs"],
+  "browser_action": {
+		"default_icon": "images/icons8-Sort Down-48.png",
+		"default_popup": "list.html"
+  }
+}

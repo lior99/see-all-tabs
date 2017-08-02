@@ -1,0 +1,132 @@
+body, html {
+	margin: 0;
+	padding: 0;
+}
+
+.settings {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.settings-content {
+	display: none;
+	width: 600px;
+	height: 400px;
+}
+
+#settings-button {
+	background-image: url('../images/icons8-Settings-16.png');
+	background-repeat: no-repeat;
+	height: 32px;
+	width: 32px;
+	background-position: center;
+	background-color:transparent;
+	outline: none;
+	border:none;
+	cursor: pointer;
+	
+}
+
+
+ul.themes {
+	list-style-type: none;	
+}
+
+ul.themes li.theme {
+	margin: 5px 0;
+	font-size:16px;
+}
+
+.theme-name {
+	display: inline;
+}
+
+.themes-section {
+	font-weight: bold;
+	position: relative;
+	top: 7px;
+}
+
+.tab-list {
+	width: 600px;
+	height: 400px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+}
+
+.tab-row {
+	padding: 10px;
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+.theme-classic {
+	background-color:#FFF;
+	color : #000;
+}
+
+.theme-dark {
+	background-color :#15111d;
+	color : #fff;
+}
+
+.tab-row:hover {
+	background-color:silver;
+	cursor: pointer;
+}
+
+.tab-row img {
+	height:16px;
+	width:16px;
+	display: flex;
+}
+
+.tab-title { 
+	font-size:13px;
+	margin-left: 5px;
+	margin-top: -4px;
+	/* overflow : hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap; */
+	flex: 3;
+}
+
+.tab-desc {
+	white-space: nowrap;
+	overflow: hidden;
+	width : 515px;
+	display: block;
+	text-overflow: ellipsis;
+}
+
+.active {
+	background-color:#2196F3;
+	color:#fff;
+
+}
+
+.close-button {
+	justify-content: flex-end;
+}
+
+.speaker {
+	height: 16px;
+	width: 16px;
+	display: inline;
+	position: relative;
+	top: 12px;
+	left: 1px;
+}
+
+.hidden {
+	display: none;
+}
+
+.offset {
+	position: relative;
+	left: 21px;
+	top: -6px;
+}
