@@ -1,9 +1,9 @@
 {
   "manifest_version": 2,
-  "name": "See All Tabs",
-  "version": "1.0.3",
+  "name": "List All Tabs",
+  "version": "1.0.4",
   "description": "show a list of all open tabs",
-  "short_name" : "See All Tabs",
+  "short_name" : "List All Tabs",
   "author": "Lior Shtivelman",
   "permissions": ["tabs"],
   "browser_action": {
