@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function() {
-	// cAllTabs.registerToClickEvent();
 	cAllTabs.init();
 	cAllTabs.displayList();
 	document.querySelector('#settings-button').addEventListener('click', cAllTabs.handleSettingsClick);
@@ -60,8 +59,8 @@ const cAllTabs = {
 								<span class="tab-desc ${hasOffset}">${tab.title}</span>
 							</div>
 							<div class="close-button" data-type="closeButton">
-								<img src="images/icons8-Close Window-48.png" data-type="closeButton"/>
-							</div>
+								<i class="fas fa-times-circle fa-2x"></i>
+							</div>	
 						</div>`;
 				
 			});
