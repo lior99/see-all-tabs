@@ -83,13 +83,15 @@ ul.themes li.theme {
 }
 
 .tab-row img {
-	height:16px;
-	width:16px;
+	/* height:16px; */
+	/* width:16px; */
+	height: 32px;
+	width: 32px;
 	display: flex;
 }
 
 .tab-title { 
-	font-size:13px;
+	font-size: 15px;
 	margin-left: 5px;
 	margin-top: -4px;
 	/* overflow : hidden;
@@ -101,7 +103,7 @@ ul.themes li.theme {
 .tab-desc {
 	white-space: nowrap;
 	overflow: hidden;
-	width : 515px;
+	width : 480px;
 	display: block;
 	text-overflow: ellipsis;
 }
@@ -118,7 +120,8 @@ ul.themes li.theme {
     width: 60px;
     display: flex;
     align-items: center;
-    justify-content: center;
+	justify-content: center;
+	margin-left: -10px;
 }
 
 .close-button i {
