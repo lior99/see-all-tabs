@@ -15,14 +15,14 @@ body, html {
 }
 
 #settings-button {
-	background-image: url('../images/icons8-Settings-16.png');
-	background-repeat: no-repeat;
-	height: 32px;
-	width: 32px;
-	background-position: center;
-	background-color:transparent;
+	/* background-image: url('../images/icons8-Settings-16.png'); */
+	/* background-repeat: no-repeat; */
+	height: 48px;
+	width: 48px;
+	/* background-position: center; */
+	/* background-color:transparent; */
 	outline: none;
-	border:none;
+	border: solid 3px #f00;
 	cursor: pointer;
 	
 }
@@ -57,10 +57,14 @@ ul.themes li.theme {
 }
 
 .tab-row {
-	padding: 10px;
 	display: flex;
 	justify-content: flex-start;
 	align-items: center;
+	min-height: 60px;
+	border-top: solid 1px #faf3f3;
+	border-bottom: none;
+	padding: 0 10px;
+
 }
 
 .theme-classic {
@@ -109,7 +113,17 @@ ul.themes li.theme {
 }
 
 .close-button {
-	justify-content: flex-end;
+	color: #f00;
+    height: 32px;
+    width: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-button i {
+	pointer-events: none;
+
 }
 
 .speaker {
