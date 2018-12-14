@@ -56,10 +56,10 @@ const cAllTabs = {
 									<img src="../images/icons8-Speaker-16.png" alt="tab is playing" data-type="speaker" style="${speakerImg}" />
 									<img src="../images/icons8-No Audio-16.png" alt="tab is muted" data-type="speaker" style="${mutedSpeakerImg}"/>
 								</span>	
-								<span class="tab-desc ${hasOffset}">${tab.title}</span>
+								<span class="tab-desc">${tab.title}</span>
 							</div>
 							<div class="close-button" data-type="closeButton">
-								<i class="fas fa-times-circle fa-2x"></i>
+								<i class="fas fa-times-circle"></i>
 							</div>	
 						</div>`;
 				
