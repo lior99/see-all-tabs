@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
 	cAllTabs.init();
 	cAllTabs.displayList();
-	document.querySelector('#settings-button').addEventListener('click', cAllTabs.handleSettingsClick);
 })
 
 document.addEventListener('unload', function() {
@@ -14,25 +13,13 @@ const cAllTabs = {
 	},
 
 	displayList : function () {
-		let theme = window.localStorage.getItem('see_all_tabs_theme') 
-		switch(theme) {
-			case null : 
-			case 'classic' :
-				theme = 'theme-classic';
-				break;
-			case 'material':
-				theme = 'theme-material';
-				break;
-			case 'dark':
-				theme = 'theme-dark';
-				break;
-		}
+		const tabList = document.querySelector('.tab-list');
+		const rowFragment = document.createDocumentFragment();
 
 		chrome.tabs.query({}, tabs => {
-			let output = tabs.map(tab => {
+			tabs.forEach(tab => {
 				let active = tab.active ? 'active' : '';
 				const speakerVisible = !tab.audible ? 'hidden' : '' ;
-				const hasOffset = tab.audible ? 'offset' : '';
 
 				let speakerImg = 'display:none';
 				let mutedSpeakerImg = 'display:none';
@@ -47,51 +34,77 @@ const cAllTabs = {
 						mutedSpeakerImg = 'display:none';
 					}
 				}
-				return `<div class="tab-row ${theme} ${active}" data-tab-id="${tab.id}">
-							<div class="favicon">
-								<img src="${tab.favIconUrl}" />
-							</div>
-							<div class="tab-title">
-								<span class="speaker ${speakerVisible}">
-									<img src="../images/icons8-Speaker-16.png" alt="tab is playing" data-type="speaker" style="${speakerImg}" />
-									<img src="../images/icons8-No Audio-16.png" alt="tab is muted" data-type="speaker" style="${mutedSpeakerImg}"/>
-								</span>	
-								<span class="tab-desc">${tab.title}</span>
-							</div>
-							<div class="close-button" data-type="closeButton">
-								<i class="fas fa-times-circle"></i>
-							</div>	
-						</div>`;
-				
+
+				rowFragment.appendChild(this.buildTabRow({tab, active, speakerVisible, speakerImg, mutedSpeakerImg}));
 			});
 
-			output = output.join('');
-			document.querySelector('.tab-list').innerHTML = output;
+			tabList.appendChild(rowFragment);
 		});
+	},
+
+	buildTabRow: function({tab, active, speakerImg, mutedSpeakerImg, speakerVisible}) {
+		const tabRow = document.createElement('div');
+		tabRow.className = `tab-row ${active}`;
+		tabRow.dataset.tabId = tab.id;
+
+		const favIcon = document.createElement('div');
+		favIcon.className = 'favicon';	
+
+		const favIconImage = document.createElement('img');
+		favIconImage.src = tab.favIconUrl;
+
+		favIcon.appendChild(favIconImage);
+		tabRow.appendChild(favIcon);
+
+		const tabTitle = document.createElement('div');
+		tabTitle.className = 'tab-title';
+
+		const speakerSpan = document.createElement('span');
+		speakerSpan.className = `speaker ${speakerVisible}`;
+
+		const speakerImage = document.createElement('img');
+		speakerImage.src = '../images/icons8-Speaker-16.png';
+		speakerImage.alt = 'tab is playing';
+		speakerImage.dataset.type = 'speaker';
+		speakerImage.style = speakerImg;
+
+		speakerSpan.append(speakerImage);
+		
+		const mutedSpeakerImgElement = document.createElement('img');
+		mutedSpeakerImgElement.src = '../images/icons8-No Audio-16.png';
+		mutedSpeakerImgElement.alt = 'tab is muted';
+		mutedSpeakerImgElement.dataset.type = 'speaker';
+		mutedSpeakerImgElement.style = mutedSpeakerImg;
+		
+		speakerSpan.append(speakerImage);
+		speakerSpan.append(mutedSpeakerImgElement);
+		tabTitle.appendChild(speakerSpan);
+		
+		const tabDesc = document.createElement('span');
+		tabDesc.className = 'tab-desc';
+		tabDesc.innerText = tab.title;
+
+		tabTitle.appendChild(tabDesc);
+		tabRow.appendChild(tabTitle);
+
+		const closeButtonDiv = document.createElement('div');
+		closeButtonDiv.className = 'close-button';
+		closeButtonDiv.dataset.type = 'closeButton';
+
+		const closeButtonImage = document.createElement('img');
+		closeButtonImage.src = './images/svg/times-circle.svg';
+		closeButtonImage.dataset.type = 'closeButton';
+
+		closeButtonDiv.appendChild(closeButtonImage);
+
+		tabRow.appendChild(closeButtonDiv);
+
+		return tabRow;
 	},
 
 	registerToClickEvent : function(){
 		const tabList = document.querySelector('.tab-list');
 		tabList.addEventListener('click', cAllTabs.handleClickEvent.bind(this));
-
-		document.querySelector('.themes').addEventListener('click', this.handleThemeClick.bind(this));
-	},
-
-	handleThemeClick : function(event) {
-		let element = event.target;
-		let theme;
-		
-		if (element.tagName.toLowerCase() === 'input') {
-			theme = element.value;
-		}
-		else if (element.tagName.toLowerCase() === 'div') {			
-			element = element.parentNode.children[0];
-			theme = element.value;
-		}
-		
-		window.localStorage.setItem('see_all_tabs_theme', theme);
-		this.displayList();
-
 	},
 
 	handleClickEvent: function(event){
