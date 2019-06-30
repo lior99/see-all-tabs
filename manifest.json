@@ -1,16 +1,18 @@
 {
-  "manifest_version": 2,
-  "name": "List All Tabs",
-  "version": "1.0.9",
-  "description": "show a list of all open tabs",
-  "short_name" : "List All Tabs",
-  "author": "Lior Shtivelman",
-  "permissions": ["tabs"],
-  "browser_action": {
-		"default_icon": "images/icons8-Sort Down-48.png",
+	"manifest_version": 2,
+	"name": "List All Tabs",
+	"version": "1.0.9",
+	"description": "show a list of all open tabs",
+	"short_name": "List All Tabs",
+	"author": "Lior Shtivelman",
+	"permissions": [
+		"tabs"
+	],
+	"browser_action": {
+		"default_icon": "images/arrow-down-on-black-circular-background.png",
 		"default_popup": "list.html"
-  },
-  "icons": {
-    "128" : "icon_128.png"
-  }
+	},
+	"icons": {
+		"128": "icon_128.png"
+	}
 }

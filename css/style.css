@@ -1,4 +1,5 @@
-body, html {
+body,
+html {
 	margin: 0;
 	padding: 0;
 	font-size: 16px;
@@ -25,17 +26,15 @@ body, html {
 	outline: none;
 	border: solid 3px #f00;
 	cursor: pointer;
-	
 }
 
-
 ul.themes {
-	list-style-type: none;	
+	list-style-type: none;
 }
 
 ul.themes li.theme {
 	margin: 5px 0;
-	font-size:16px;
+	font-size: 16px;
 }
 
 .theme-name {
@@ -65,36 +64,35 @@ ul.themes li.theme {
 	border-top: solid 1px #faf3f3;
 	border-bottom: none;
 	padding: 0 10px;
-
 }
 
 .theme-classic {
-	background-color:#FFF;
-	color : #000;
+	background-color: #fff;
+	color: #000;
 }
 
 .theme-dark {
-	background-color :#15111d;
-	color : #fff;
+	background-color: #15111d;
+	color: #fff;
 }
 
 .tab-row:hover {
-	background-color:silver;
+	background-color: silver;
 	cursor: pointer;
 }
 
 .tab-row img {
-	height:16px;
-	width:16px;
+	height: 16px;
+	width: 16px;
 	display: flex;
 }
 
-.tab-title { 
+.tab-title {
 	font-size: 0.9rem;
-    margin-left: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+	margin-left: 5px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 	flex-direction: row;
 	width: calc(100% - 40px);
 }
@@ -102,28 +100,26 @@ ul.themes li.theme {
 .tab-desc {
 	white-space: nowrap;
 	overflow: hidden;
-	width : 380px;
+	width: 380px;
 	display: block;
 	text-overflow: ellipsis;
 }
 
 .active {
-	background-color:#2196F3;
-	color:#fff;
-
+	background-color: #b2b0b0;
+	color: #000;
 }
 
 .close-button {
 	/* color: #1e88e5; */
-    display: flex;
-    align-items: center;
+	display: flex;
+	align-items: center;
 	justify-content: center;
 	transform: scale(1.3);
 }
 
 .close-button i {
 	pointer-events: none;
-
 }
 
 .speaker {
@@ -140,4 +136,14 @@ ul.themes li.theme {
 	position: relative;
 	left: 21px;
 	top: -6px;
+}
+
+.group {
+}
+
+.group .group-title {
+	padding: 10px 0 10px 10px;
+	font-weight: bold;
+	background: #9c27b0;
+	color: #fff;
 }
