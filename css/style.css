@@ -147,3 +147,29 @@ ul.themes li.theme {
 	background: #9c27b0;
 	color: #fff;
 }
+.filterBox {
+	height: 20px;
+    font-size: 1em;
+    margin-bottom: 9px;
+    width: 80%;
+    margin-top: 7px;
+}
+
+.filterBox::placeholder {
+	font-style: italic;
+	color: #afabab;
+}
+
+.search-box {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+
+.remove-filter {
+	height: 24px;
+    cursor: pointer;
+    position: relative;
+    right: 27px;
+}
