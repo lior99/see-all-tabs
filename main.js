@@ -1,17 +1,17 @@
 // register to dom events
 // ---------------------------------------------------------
-(function(){
+(function() {
 	let app;
 
 	window.addEventListener('DOMContentLoaded', function() {
 		app = new App();
 		app.init();
 	});
-	
+
 	window.addEventListener('unload', function() {
 		app.unregisterAndCleanUp();
 	});
-	
+
 	// App function
 	function App() {
 		this.currentWindowId = null;
@@ -34,11 +34,11 @@
 		tabsList.forEach((chromeWindow, index) => {
 			const tabRowFragment = document.createDocumentFragment();
 			chromeWindow.tabs.forEach(tab => {
-				tabRowFragment.appendChild(buildTabRow({ tab }));
+				tabRowFragment.appendChild(this.buildTabRow({ tab }));
 			});
 
 			if (tabsList.length > 1 && chromeWindow.tabs.length > 0) {
-				const group = buildGroup({ chromeWindow, tabRowFragment, windowIndex: index + 1 });
+				const group = this.buildGroup({ chromeWindow, tabRowFragment, windowIndex: index + 1 });
 				tabListDomElement.appendChild(group);
 			} else {
 				tabListDomElement.appendChild(tabRowFragment);
@@ -139,13 +139,13 @@
 	App.prototype.clearFilter = function() {
 		document.querySelector('.filterBox').value = '';
 		document.querySelector('.tab-list').innerHTML = '';
-		this.displayList({ tabsList: listOfTabs });
+		this.displayList({ tabsList: this.listOfTabs });
 	};
 
 	App.prototype.registerEvents = function() {
-		document.querySelector('.tab-list').addEventListener('click', this.onTabListClick);
-		document.querySelector('.filterBox').addEventListener('keyup', this.filterTabs);
-		document.querySelector('.remove-filter').addEventListener('click', this.clearFilter);
+		document.querySelector('.tab-list').addEventListener('click', this.onTabListClick.bind(app));
+		document.querySelector('.filterBox').addEventListener('keyup', this.filterTabs.bind(app));
+		document.querySelector('.remove-filter').addEventListener('click', this.clearFilter.bind(app));
 	};
 
 	App.prototype.onTabListClick = function(event) {
@@ -167,9 +167,10 @@
 	};
 
 	App.prototype.toggleMute = function(tabId) {
-		chrome.tabs.get(tabId, function(tabData) {
+		chrome.tabs.get(tabId, tabData => {
 			const muted = !tabData.mutedInfo.muted;
 			chrome.tabs.update(tabId, { muted: muted });
+			console.log('this', this);
 			this.toggleMuteIcon(tabId, muted);
 		});
 	};
@@ -254,7 +255,7 @@
 	App.prototype.init = async function() {
 		this.registerEvents();
 		await this.getTabsList();
-		this.displayList({ tabsList: listOfTabs });
+		this.displayList({ tabsList: this.listOfTabs });
 	};
 
 	// prototype methods on function
@@ -264,6 +265,3 @@
 		this.displayList({ tabsList: filteredListOfTabs });
 	};
 })();
-
-
-
