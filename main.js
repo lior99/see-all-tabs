@@ -1,42 +1,52 @@
-(function main() {
-	let currentWindowId = null;
-	let windowCounter = 0;
-	let listOfTabs = [];
+// register to dom events
+// ---------------------------------------------------------
+(function() {
+	let app;
 
-	function displayFilteredList(filteredListOfTabs) {
-		const tabListDomElement = document.querySelector('.tab-list');
-		tabListDomElement.innerHTML = '';
-		displayList({ tabsList: filteredListOfTabs });
+	window.addEventListener('DOMContentLoaded', function() {
+		app = new App();
+		app.init();
+	});
+
+	window.addEventListener('unload', function() {
+		app.unregisterAndCleanUp();
+	});
+
+	// App function
+	function App() {
+		this.currentWindowId = null;
+		this.windowCounter = 0;
+		this.listOfTabs = [];
 	}
 
-	function getTabsList() {
+	App.prototype.getTabsList = function() {
 		return new Promise((resolve, reject) => {
 			chrome.windows.getAll({ populate: true }, listOfWindows => {
-				listOfTabs = [...listOfWindows];
+				this.listOfTabs = [...listOfWindows];
 				resolve();
 			});
 		});
-	}
+	};
 
-	function displayList({ tabsList }) {
+	App.prototype.displayList = function({ tabsList }) {
 		const tabListDomElement = document.querySelector('.tab-list');
 
 		tabsList.forEach((chromeWindow, index) => {
 			const tabRowFragment = document.createDocumentFragment();
 			chromeWindow.tabs.forEach(tab => {
-				tabRowFragment.appendChild(buildTabRow({ tab }));
+				tabRowFragment.appendChild(this.buildTabRow({ tab }));
 			});
 
 			if (tabsList.length > 1 && chromeWindow.tabs.length > 0) {
-				const group = buildGroup({ chromeWindow, tabRowFragment, windowIndex: index + 1 });
+				const group = this.buildGroup({ chromeWindow, tabRowFragment, windowIndex: index + 1 });
 				tabListDomElement.appendChild(group);
 			} else {
 				tabListDomElement.appendChild(tabRowFragment);
 			}
 		});
-	}
+	};
 
-	function buildGroup({ chromeWindow, tabRowFragment, windowIndex }) {
+	App.prototype.buildGroup = function({ chromeWindow, tabRowFragment, windowIndex }) {
 		const group = document.createElement('div');
 		group.className = 'group';
 
@@ -53,9 +63,9 @@
 		group.appendChild(tabRowFragment);
 
 		return group;
-	}
+	};
 
-	function buildTabRow({ tab }) {
+	App.prototype.buildTabRow = function({ tab }) {
 		const active = tab.active ? 'active' : '';
 		const speakerVisible = !tab.audible ? 'hidden' : '';
 
@@ -124,62 +134,62 @@
 		tabRow.appendChild(closeButtonDiv);
 
 		return tabRow;
-	}
+	};
 
-	function clearFilter() {
+	App.prototype.clearFilter = function() {
 		document.querySelector('.filterBox').value = '';
 		document.querySelector('.tab-list').innerHTML = '';
-		displayList({ tabsList: listOfTabs });
-	}
+		this.displayList({ tabsList: this.listOfTabs });
+	};
 
-	function registerEvents() {
-		document.querySelector('.tab-list').addEventListener('click', handleClickEvent);
-		document.querySelector('.filterBox').addEventListener('keyup', filterTabs);
-		document.querySelector('.remove-filter').addEventListener('click', clearFilter);
-	}
+	App.prototype.registerEvents = function() {
+		document.querySelector('.tab-list').addEventListener('click', this.onTabListClick.bind(app));
+		document.querySelector('.filterBox').addEventListener('keyup', this.filterTabs.bind(app));
+		document.querySelector('.remove-filter').addEventListener('click', this.clearFilter.bind(app));
+	};
 
-	function handleClickEvent(event) {
-		const { tabId, windowId } = getTabData(event);
+	App.prototype.onTabListClick = function(event) {
+		const { tabId, windowId } = this.getTabData(event);
 		const tagName = event.target.tagName.toLowerCase();
 		const type = event.target.dataset.type;
 
 		if (tagName === 'img' && type === 'speaker') {
-			toggleMute(tabId);
+			this.toggleMute(tabId);
 			return;
 		}
 
 		if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
-			removeTabFromList(tabId);
-			closeTab(tabId);
+			this.removeTabFromList(tabId);
+			this.closeTab(tabId);
 		} else {
-			setActiveTab({ tabId, windowId });
+			this.setActiveTab({ tabId, windowId });
 		}
-	}
+	};
 
-	function toggleMute(tabId) {
-		chrome.tabs.get(tabId, function(tabData) {
+	App.prototype.toggleMute = function(tabId) {
+		chrome.tabs.get(tabId, tabData => {
 			const muted = !tabData.mutedInfo.muted;
 			chrome.tabs.update(tabId, { muted: muted });
-			toggleMuteIcon(tabId, muted);
+			console.log('this', this);
+			this.toggleMuteIcon(tabId, muted);
 		});
-	}
+	};
 
-	function setActiveTab({ tabId, windowId }) {
-		// if (windowId && windowId !== selectedWindowId) {
+	App.prototype.setActiveTab = function({ tabId, windowId }) {
 		chrome.windows.update(windowId, { focused: true }, function() {
-			selectedWindowId = windowId;
+			this.selectedWindowId = windowId;
 		});
 
 		chrome.tabs.update(tabId, { active: true });
-	}
+	};
 
-	function unregisterAndCleanUp() {
-		document.querySelector('.tab-list').addEventListener('click', handleClickEvent);
-		document.querySelector('.filterBox').addEventListener('keyup', filterTabs);
-		document.querySelector('.remove-filter').addEventListener('click', clearFilter);
-	}
+	App.prototype.unregisterAndCleanUp = function() {
+		document.querySelector('.tab-list').removeEventListener('click', this.onTabListClick);
+		document.querySelector('.filterBox').removeEventListener('keyup', this.filterTabs);
+		document.querySelector('.remove-filter').removeEventListener('click', this.clearFilter);
+	};
 
-	function getTabData(event) {
+	App.prototype.getTabData = function(event) {
 		let currentElement = event.target;
 		let elementType = currentElement.tagName.toLowerCase();
 
@@ -192,13 +202,13 @@
 			tabId: parseInt(currentElement.dataset.tabId),
 			windowId: parseInt(currentElement.dataset.windowId),
 		};
-	}
+	};
 
-	function closeTab(tabId) {
+	App.prototype.closeTab = function(tabId) {
 		chrome.tabs.remove(tabId);
-	}
+	};
 
-	function removeTabFromList(tabId) {
+	App.prototype.removeTabFromList = function(tabId) {
 		const list = [...document.querySelectorAll('.tab-row')];
 		const tab = list.find(tab => parseInt(tab.dataset.tabId) === parseInt(tabId));
 
@@ -214,26 +224,22 @@
 				document.querySelector('.tab-list').removeChild(group);
 			}
 		}
-	}
+	};
 
-	function toggleMuteIcon(tabId, muted) {
+	App.prototype.toggleMuteIcon = function(tabId, muted) {
 		const list = [...document.querySelectorAll('.tab-row')];
 		const tab = list.find(tab => parseInt(tab.dataset.tabId) === parseInt(tabId));
 
 		const tabTitle = tab.children[1];
-		if (muted) {
-			tabTitle.children[0].children[0].style.display = 'none';
-			tabTitle.children[0].children[1].style.display = 'block';
-		} else {
-			tabTitle.children[0].children[0].style.display = 'block';
-			tabTitle.children[0].children[1].style.display = 'none';
-		}
-	}
 
-	function filterTabs(event) {
+		tabTitle.children[0].children[0].style.display = muted ? 'none' : 'block';
+		tabTitle.children[0].children[1].style.display = muted ? 'block' : 'none';
+	};
+
+	App.prototype.filterTabs = function(event) {
 		const valueToFilterBy = event.target.value;
 
-		const filteredList = listOfTabs.map(group => {
+		const filteredList = this.listOfTabs.map(group => {
 			const tabs = group.tabs.filter(tab => {
 				return tab.title.indexOf(valueToFilterBy) > -1 || tab.url.indexOf(valueToFilterBy) > -1;
 			});
@@ -243,23 +249,19 @@
 			});
 		});
 
-		displayFilteredList(filteredList);
-	}
+		this.displayFilteredList(filteredList);
+	};
 
-	async function init() {
-		registerEvents();
-		await getTabsList();
-		displayList({ tabsList: listOfTabs });
-	}
+	App.prototype.init = async function() {
+		this.registerEvents();
+		await this.getTabsList();
+		this.displayList({ tabsList: this.listOfTabs });
+	};
 
-	// register to dom events
-	// ---------------------------------------------------------
-	document.addEventListener('DOMContentLoaded', function() {
-		init();
-	});
-
-	document.addEventListener('unload', function() {
-		unregisterAndCleanUp();
-	});
-	// ---------------------------------------------------------
+	// prototype methods on function
+	App.prototype.displayFilteredList = function(filteredListOfTabs) {
+		const tabListDomElement = document.querySelector('.tab-list');
+		tabListDomElement.innerHTML = '';
+		this.displayList({ tabsList: filteredListOfTabs });
+	};
 })();
