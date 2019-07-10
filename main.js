@@ -144,8 +144,18 @@
 
 	App.prototype.registerEvents = function() {
 		document.querySelector('.tab-list').addEventListener('click', this.onTabListClick.bind(app));
+		document.querySelector('.tab-list').addEventListener('mousedown', this.onMouseDown.bind(app));
 		document.querySelector('.filterBox').addEventListener('keyup', this.filterTabs.bind(app));
 		document.querySelector('.remove-filter').addEventListener('click', this.clearFilter.bind(app));
+	};
+
+	App.prototype.onMouseDown = function(event) {
+		const isMiddleButtonDown = event.which === 2;
+		if (isMiddleButtonDown) {
+			const { tabId, windowId } = this.getTabData(event);
+			this.removeTabFromList(tabId);
+			this.closeTab(tabId);
+		}
 	};
 
 	App.prototype.onTabListClick = function(event) {
