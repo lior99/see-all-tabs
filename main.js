@@ -1,6 +1,3 @@
-// register to dom events
-// ---------------------------------------------------------
-(function() {
 	let app;
 
 	window.addEventListener('DOMContentLoaded', function() {
@@ -33,6 +30,7 @@
 
 		tabsList.forEach((chromeWindow, index) => {
 			const tabRowFragment = document.createDocumentFragment();
+
 			chromeWindow.tabs.forEach(tab => {
 				tabRowFragment.appendChild(this.buildTabRow({ tab }));
 			});
@@ -48,13 +46,23 @@
 
 	App.prototype.buildGroup = function({ chromeWindow, tabRowFragment, windowIndex }) {
 		const group = document.createElement('div');
-		group.className = 'group';
+		group.className = `group ${chromeWindow.incognito ? 'incognito' : ''}`;
 
 		const groupTitle = document.createElement('div');
 		groupTitle.className = 'group-title';
 		currentWindowId = chromeWindow.tabs.length > 0 ? chromeWindow.tabs[0].windowId : windowIndex;
-		groupTitle.innerText = `window ${windowIndex}`;
-		group.className = 'group';
+		groupTitle.innerHTML = `window ${windowIndex}`;
+		
+		if (chromeWindow.incognito) {
+			const img = document.createElement('img');
+			img.src = '../images/incognito.png';
+			img.style.width = '32px';
+			img.className = "incognito-image";
+
+			groupTitle.appendChild(img)
+		}
+
+		
 		group.dataset.groupId = currentWindowId;
 
 		if (chromeWindow.tabs.length > 0) {
@@ -180,7 +188,6 @@
 		chrome.tabs.get(tabId, tabData => {
 			const muted = !tabData.mutedInfo.muted;
 			chrome.tabs.update(tabId, { muted: muted });
-			console.log('this', this);
 			this.toggleMuteIcon(tabId, muted);
 		});
 	};
@@ -274,4 +281,3 @@
 		tabListDomElement.innerHTML = '';
 		this.displayList({ tabsList: filteredListOfTabs });
 	};
-})();

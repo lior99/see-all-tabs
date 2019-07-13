@@ -111,7 +111,6 @@ ul.themes li.theme {
 }
 
 .close-button {
-	/* color: #1e88e5; */
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -138,21 +137,27 @@ ul.themes li.theme {
 	top: -6px;
 }
 
-.group {
-}
-
-.group .group-title {
+.group > .group-title {
 	padding: 10px 0 10px 10px;
 	font-weight: bold;
 	background: #9c27b0;
 	color: #fff;
 }
+
+.incognito > .group-title {
+	background: #6c6b6b;
+    height: 22px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
 .filterBox {
 	height: 20px;
-    font-size: 1em;
-    margin-bottom: 9px;
-    width: 80%;
-    margin-top: 7px;
+	font-size: 1em;
+	margin-bottom: 9px;
+	width: 80%;
+	margin-top: 7px;
 }
 
 .filterBox::placeholder {
@@ -169,7 +174,7 @@ ul.themes li.theme {
 
 .remove-filter {
 	height: 24px;
-    cursor: pointer;
-    position: relative;
-    right: 27px;
+	cursor: pointer;
+	position: relative;
+	right: 27px;
 }
