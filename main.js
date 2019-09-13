@@ -2,6 +2,10 @@ const App = {
     currentWindowId: null,
     windowCounter: 0,
     listOfTabs: [],
+    highlightedTab: -1,
+    isInFilterMode: false,
+    filteredResultsLength: 0,
+    tabsCount: 0,
     
     /**
      * main entry point
@@ -10,6 +14,8 @@ const App = {
         this.registerEvents();
         this.listOfTabs = await this.getTabsList();
         this.displayList({ tabsList: this.listOfTabs });
+        document.querySelector('.filterBox').focus();
+        this.tabsCount = this.calcTabsCount();
     },
 
     /**
@@ -30,10 +36,21 @@ const App = {
      *  */ 
     registerEvents: function() {
         const tabList = document.querySelector('.tab-list');
+        const filterBox = document.querySelector('.filterBox');
         tabList.addEventListener('click', this.onTabListClick.bind(this));
         tabList.addEventListener('mousedown', this.onMouseDown.bind(this));
-        document.querySelector('.filterBox').addEventListener('keyup', this.filterTabs.bind(this));
+        filterBox.addEventListener('keyup', this.filterTabs.bind(this));
         document.querySelector('.remove-filter').addEventListener('click', this.clearFilter.bind(this));
+        this.handleKeyboardEvent();
+        // document.querySelector('body').addEventListener('mousemove', this.onMouseMove.bind(this));
+        
+    },
+
+    /**
+     * onmouse move handle for the body
+     */
+    onMouseMove: function() {
+        this.setHightlitedTab({set: false});
     },
 
     /**
@@ -216,6 +233,7 @@ const App = {
         document.querySelector('.filterBox').value = '';
         document.querySelector('.tab-list').innerHTML = '';
         this.displayList({ tabsList: this.listOfTabs });
+        this.isInFilterMode = false;
     },
 
     /**
@@ -236,6 +254,10 @@ const App = {
      * @param {event} event - onClick event
      */
     onTabListClick :function(event) {
+        if (event.target.id === 'tabList') {
+            return;
+        } 
+
         const { tabId, windowId } = this.getTabData(event);
         const tagName = event.target.tagName.toLowerCase();
         const type = event.target.dataset.type;
@@ -279,9 +301,10 @@ const App = {
     },
 
     unregisterEvents: function() {
-        document.querySelector('.tab-list').removeEventListener('click', this.onTabListClick.bind(this));
-        document.querySelector('.filterBox').removeEventListener('keyup', this.filterTabs.bind(this));
-        document.querySelector('.remove-filter').removeEventListener('click', this.clearFilter.bind(this));
+        document.querySelector('.tab-list').removeEventListener('click', this.onTabListClick);
+        document.querySelector('.filterBox').removeEventListener('keyup', this.filterTabs);
+        document.querySelector('.remove-filter').removeEventListener('click', this.clearFilter);
+        window.removeEventListener('mousemove', this.onMouseMove);
     },
 
     /**
@@ -309,6 +332,7 @@ const App = {
      */
     closeTab: function(tabId) {
         chrome.tabs.remove(tabId);
+        this.tabsCount = this.calcTabsCount();
     },
 
     /**
@@ -353,6 +377,11 @@ const App = {
      * @param {event} event - keyboard event
      */
     filterTabs: function(event) {
+        const { keyCode } = event;
+        if (keyCode === 40 || keyCode === 38 || keyCode === 13) {
+            return;
+        }
+
         const valueToFilterBy = event.target.value.toLowerCase();
 
         const filteredList = this.listOfTabs.map(group => {
@@ -366,6 +395,99 @@ const App = {
         });
 
         this.displayFilteredList(filteredList);
+        this.highlightedTab = -1;
+        this.isInFilterMode = true;
+        this.filteredResultsLength = this.calcTabsCount();
+    },
+
+    /**
+     * use keyboard arrows and enter to switch to tab
+     * @param {event} event - keyboard event
+     */
+    handleKeyboardEvent: function() {
+        document.querySelector('body').addEventListener('keyup', this.onKeyboardButtonPress.bind(this));
+    },
+
+
+    onKeyboardButtonPress: function(event) {
+        const { keyCode } = event;
+
+        // check if up/down arrows and enter
+        if (keyCode === 38 || keyCode === 40 || keyCode === 13)  { 
+            switch (keyCode) {
+                case 13: {
+                    // enter
+                    console.log('%ccurrent', 'font-size:20px; color: pink', document.querySelectorAll('.tab-row')[this.highlightedTab]);
+                    const {tabId, windowId } = document.querySelectorAll('.tab-row')[this.highlightedTab].dataset;
+                    const params = {
+                        tabId: parseInt(tabId),
+                        windowId: parseInt(windowId)
+                    };
+
+                    this.setActiveTab(params);
+                    break;
+                }
+              
+                case 38: { //
+                    // up arrow
+                    this.highlightPreviousTab();
+                    break;
+                }
+                case 40: {
+                    // down arrow
+                    this.highlightNextTab();
+                    break;
+                }
+            }
+        }
+    },
+
+    highlightNextTab: function() {
+        if (this.isInFilterMode) {
+            if (this.highlightedTab + 1 < this.filteredResultsLength) {
+                this.highlightedTab++;
+                this.setHightlitedTab({set: true});
+            }
+        } else {
+            if (this.highlightedTab + 1 < this.tabsCount - 1) {
+                this.highlightedTab++;
+                this.setHightlitedTab({set: true});
+            }
+        }
+    },
+
+    highlightPreviousTab: function() {
+        if (this.highlightedTab > 0) {
+            this.highlightedTab--;
+            this.setHightlitedTab({set: true});
+        }
+    },
+
+    /**
+     * calculate how many open tabs are there including all open windows
+     */
+    calcTabsCount: function() {
+        if (this.listOfTabs.length == 1)  {
+            return this.listOfTabs[0].tabs.length;
+        }
+    
+        let total = 0;
+        const totalTabsNumber = this.listOfTabs.reduce((tabCount, currentValue) => {
+            return tabCount + currentValue.tabs.length;                
+        }, total);
+
+        return totalTabsNumber;
+    },
+
+    setHightlitedTab: function({ set }) {
+        const tabRowsList = document.querySelectorAll('.tab-row');
+
+        tabRowsList.forEach(element => element.classList.remove('hightlighted'));
+
+        if (set) {
+            tabRowsList[this.highlightedTab].classList.add('hightlighted');
+            tabRowsList[this.highlightedTab].scrollIntoView({behavior: "smooth", block: "nearest"});
+        }
     },
 
     /**

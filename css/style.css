@@ -178,3 +178,7 @@ ul.themes li.theme {
 	position: relative;
 	right: 27px;
 }
+
+.hightlighted {
+	background-color: silver;
+}
