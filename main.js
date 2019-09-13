@@ -42,7 +42,7 @@ const App = {
         filterBox.addEventListener('keyup', this.filterTabs.bind(this));
         document.querySelector('.remove-filter').addEventListener('click', this.clearFilter.bind(this));
         this.handleKeyboardEvent();
-        // document.querySelector('body').addEventListener('mousemove', this.onMouseMove.bind(this));
+        document.querySelector('body').addEventListener('mousemove', this.onMouseMove.bind(this));
         
     },
 
