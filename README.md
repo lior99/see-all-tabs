@@ -1,4 +1,4 @@
-# List all tabs Extetion
+# List all tabs Extension
 Display all tabs as a list, with filter.
 This extention allows easy switching tabs, toggle mute/unmute a tab and closing it.
 
