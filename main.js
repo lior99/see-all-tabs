@@ -15,7 +15,7 @@ const App = {
         this.listOfTabs = await this.getTabsList();
         this.displayList({ tabsList: this.listOfTabs });
         document.querySelector('.filterBox').focus();
-        this.tabsCount = this.calcTabsCount();
+        this.tabsCount = this.calcTabsCount({groupOfTabs: this.listOfTabs});
     },
 
     /**
@@ -41,7 +41,7 @@ const App = {
         tabList.addEventListener('mousedown', this.onMouseDown.bind(this));
         filterBox.addEventListener('keyup', this.filterTabs.bind(this));
         document.querySelector('.remove-filter').addEventListener('click', this.clearFilter.bind(this));
-        this.handleKeyboardEvent();
+        document.querySelector('body').addEventListener('keyup', this.onKeyboardButtonPress.bind(this));
         document.querySelector('body').addEventListener('mousemove', this.onMouseMove.bind(this));
         
     },
@@ -332,7 +332,7 @@ const App = {
      */
     closeTab: function(tabId) {
         chrome.tabs.remove(tabId);
-        this.tabsCount = this.calcTabsCount();
+        this.tabsCount = this.calcTabsCount({ groupOfTabs: this.listOfTabs });
     },
 
     /**
@@ -378,7 +378,7 @@ const App = {
      */
     filterTabs: function(event) {
         const { keyCode } = event;
-        if (keyCode === 40 || keyCode === 38 || keyCode === 13) {
+        if (keyCode === 40 || keyCode === 38 || keyCode === 13 || keyCode === 37 || keyCode === 39) {
             return;
         }
 
@@ -397,17 +397,8 @@ const App = {
         this.displayFilteredList(filteredList);
         this.highlightedTab = -1;
         this.isInFilterMode = true;
-        this.filteredResultsLength = this.calcTabsCount();
+        this.filteredResultsLength = this.calcTabsCount({ groupOfTabs: filteredList});
     },
-
-    /**
-     * use keyboard arrows and enter to switch to tab
-     * @param {event} event - keyboard event
-     */
-    handleKeyboardEvent: function() {
-        document.querySelector('body').addEventListener('keyup', this.onKeyboardButtonPress.bind(this));
-    },
-
 
     onKeyboardButtonPress: function(event) {
         const { keyCode } = event;
@@ -417,7 +408,6 @@ const App = {
             switch (keyCode) {
                 case 13: {
                     // enter
-                    console.log('%ccurrent', 'font-size:20px; color: pink', document.querySelectorAll('.tab-row')[this.highlightedTab]);
                     const {tabId, windowId } = document.querySelectorAll('.tab-row')[this.highlightedTab].dataset;
                     const params = {
                         tabId: parseInt(tabId),
@@ -444,7 +434,7 @@ const App = {
 
     highlightNextTab: function() {
         if (this.isInFilterMode) {
-            if (this.highlightedTab + 1 < this.filteredResultsLength) {
+            if (this.highlightedTab + 1 <= this.filteredResultsLength - 1) {
                 this.highlightedTab++;
                 this.setHightlitedTab({set: true});
             }
@@ -466,19 +456,23 @@ const App = {
     /**
      * calculate how many open tabs are there including all open windows
      */
-    calcTabsCount: function() {
-        if (this.listOfTabs.length == 1)  {
-            return this.listOfTabs[0].tabs.length;
+    calcTabsCount: function({ groupOfTabs }) {
+        if (groupOfTabs.length === 1)  {
+            return groupOfTabs[0].tabs.length;
         }
     
         let total = 0;
-        const totalTabsNumber = this.listOfTabs.reduce((tabCount, currentValue) => {
+        const totalTabsNumber = groupOfTabs.reduce((tabCount, currentValue) => {
             return tabCount + currentValue.tabs.length;                
         }, total);
 
         return totalTabsNumber;
     },
 
+    /**
+     * Set background color to a tab
+     * @param {boolean} set - indicates whether to highlight a tab or not 
+     */
     setHightlitedTab: function({ set }) {
         const tabRowsList = document.querySelectorAll('.tab-row');
 
@@ -486,7 +480,7 @@ const App = {
 
         if (set) {
             tabRowsList[this.highlightedTab].classList.add('hightlighted');
-            tabRowsList[this.highlightedTab].scrollIntoView({behavior: "smooth", block: "nearest"});
+            tabRowsList[this.highlightedTab].scrollIntoView({behavior: 'smooth', block: 'nearest'});
         }
     },
 
