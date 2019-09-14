@@ -4,7 +4,6 @@ This extention allows easy switching tabs, toggle mute/unmute a tab and closing 
 
 Changelog:
 * version 2.1.2 - now supports closing a tab widht middle mouse button
-* version 3 -  
-
-        :bug: - fix bug allowing search of case insensitive both title and url 
-         :construction: in development - enable support for keyboard navigation  
+* version 3 - <br/>
+        :bug: - fix bug allowing search of case insensitive both title and url    
+        :construction: in development - enable support for keyboard navigation  
