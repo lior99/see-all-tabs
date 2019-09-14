@@ -10,4 +10,4 @@ Changelog:
 * version 2.1.2 - now supports closing a tab widht middle mouse button
 * version 3 - <br/>
         :bug: - fix bug allowing search of case insensitive both title and url   
-        :fire: enable support for keyboard navigation  
+        :fire: - enable support for keyboard navigation  
