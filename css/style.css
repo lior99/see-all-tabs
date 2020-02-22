@@ -1,184 +1,186 @@
+@font-face {
+  font-family: 'Open Sans';
+  src: url('/Open_Sans/OpenSans-Regular.ttf') format('truetype');
+}
+
 body,
 html {
-	margin: 0;
-	padding: 0;
-	font-size: 16px;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  font-family: 'Open Sans';
 }
 
 .settings {
-	display: flex;
-	justify-content: flex-end;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .settings-content {
-	display: none;
-	width: 600px;
-	height: 400px;
+  display: none;
+  width: 600px;
+  height: 400px;
 }
 
 #settings-button {
-	/* background-image: url('../images/icons8-Settings-16.png'); */
-	/* background-repeat: no-repeat; */
-	height: 48px;
-	width: 48px;
-	/* background-position: center; */
-	/* background-color:transparent; */
-	outline: none;
-	border: solid 3px #f00;
-	cursor: pointer;
+  height: 48px;
+  width: 48px;
+  outline: none;
+  border: solid 3px #f00;
+  cursor: pointer;
 }
 
 ul.themes {
-	list-style-type: none;
+  list-style-type: none;
 }
 
 ul.themes li.theme {
-	margin: 5px 0;
-	font-size: 16px;
+  margin: 5px 0;
+  font-size: 16px;
 }
 
 .theme-name {
-	display: inline;
+  display: inline;
 }
 
 .themes-section {
-	font-weight: bold;
-	position: relative;
-	top: 7px;
+  font-weight: bold;
+  position: relative;
+  top: 7px;
 }
 
 .tab-list {
-	width: 450px;
-	height: 400px;
-	overflow-x: hidden;
-	overflow-y: auto;
-	display: flex;
-	flex-direction: column;
+  width: 450px;
+  height: 400px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .tab-row {
-	display: flex;
-	justify-content: flex-start;
-	align-items: center;
-	min-height: 33px;
-	border-top: solid 1px #faf3f3;
-	border-bottom: none;
-	padding: 0 10px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 33px;
+  border-top: solid 1px #faf3f3;
+  border-bottom: none;
+  padding: 0 10px;
 }
 
 .theme-classic {
-	background-color: #fff;
-	color: #000;
+  background-color: #fff;
+  color: #000;
 }
 
 .theme-dark {
-	background-color: #15111d;
-	color: #fff;
+  background-color: #15111d;
+  color: #fff;
 }
 
 .tab-row:hover {
-	background-color: silver;
-	cursor: pointer;
+  background-color: silver;
+  cursor: pointer;
 }
 
 .tab-row img {
-	height: 16px;
-	width: 16px;
-	display: flex;
+  height: 16px;
+  width: 16px;
+  display: flex;
 }
 
 .tab-title {
-	font-size: 0.9rem;
-	margin-left: 5px;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex-direction: row;
-	width: calc(100% - 40px);
+  font-size: 0.9rem;
+  margin-left: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  width: calc(100% - 40px);
 }
 
 .tab-desc {
-	white-space: nowrap;
-	overflow: hidden;
-	width: 380px;
-	display: block;
-	text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 380px;
+  display: block;
+  text-overflow: ellipsis;
 }
 
 .active {
-	background-color: #b2b0b0;
-	color: #000;
+  background-color: #b2b0b0;
+  color: #000;
 }
 
 .close-button {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	transform: scale(1.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(1.3);
 }
 
 .close-button i {
-	pointer-events: none;
+  pointer-events: none;
 }
 
 .speaker {
-	height: 16px;
-	width: 16px;
-	margin: 0 5px;
+  height: 16px;
+  width: 16px;
+  margin: 0 5px;
 }
 
 .hidden {
-	display: none;
+  display: none;
 }
 
 .offset {
-	position: relative;
-	left: 21px;
-	top: -6px;
+  position: relative;
+  left: 21px;
+  top: -6px;
 }
 
 .group > .group-title {
-	padding: 10px 0 10px 10px;
-	font-weight: bold;
-	background: #9c27b0;
-	color: #fff;
+  padding: 10px 0 10px 10px;
+  font-weight: bold;
+  background: #9c27b0;
+  color: #fff;
 }
 
 .incognito > .group-title {
-	background: #6c6b6b;
-    height: 22px;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
+  background: #6c6b6b;
+  height: 22px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .filterBox {
-	height: 20px;
-	font-size: 1em;
-	margin-bottom: 9px;
-	width: 80%;
-	margin-top: 7px;
+  height: 20px;
+  font-size: 1em;
+  margin-bottom: 9px;
+  width: 80%;
+  margin-top: 7px;
 }
 
 .filterBox::placeholder {
-	font-style: italic;
-	color: #afabab;
+  font-style: italic;
+  color: #afabab;
 }
 
 .search-box {
-	display: flex;
-	flex-direction: row;
-	justify-content: center;
-	align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
 }
 
 .remove-filter {
-	height: 24px;
-	cursor: pointer;
-	position: relative;
-	right: 27px;
+  height: 24px;
+  cursor: pointer;
+  position: relative;
+  right: 27px;
 }
 
 .hightlighted {
-	background-color: silver;
+  background-color: silver;
 }
