@@ -108,16 +108,10 @@ ul.themes li.theme {
 }
 
 .active {
-  /* background-color: #b2b0b0;
-  color: #000; */
-
-  /* background-color: #e1dfdf; */
-  color: #000;
-  /* font-weight: 900; */
+  background: #8BC34A;
 }
 
   .active .tab-desc {
-    font-size: 1.1rem;
     font-weight: 700;
   }
 
@@ -153,14 +147,24 @@ ul.themes li.theme {
   top: -6px;
 }
 
+.group {
+  border: solid 1px #000;
+  margin-bottom: 10px;
+}
+
+.group:nth-last-child(1) {
+  margin-bottom: 0;
+}
+
 .group > .group-title {
   padding: 4px 10px;
   color: #000;
   background: #90CAF9;
+  border-bottom: solid 1px #9c989c;
 }
 
 .group > .group-title.current {
-  background: #2767b0;
+  background: cornflowerblue;
   font-weight: bold;
   color: #fff;
 }
