@@ -180,7 +180,6 @@ const App = {
    * @param {object} tab - chrome's tab object
    */
   buildTabRow: function({ tab, currentWindowId, onlyTabInWindow }) {
-    console.log('tab', tab);
     const active = tab.active && tab.windowId === currentWindowId && !onlyTabInWindow ? 'active' : '';
 
     const tabRow = document.createElement('div');
@@ -383,7 +382,7 @@ const App = {
    * @param {event} event - on click event
    */
   getTabData: function(event) {
-    let currentElement = event.target;
+    let currentElement = event.srcElement;
     let elementType = currentElement.tagName.toLowerCase();
 
     while (
@@ -426,9 +425,11 @@ const App = {
     } else {
       group.removeChild(tab);
       const children = [...group.children];
+      
       const hasTabs = children.some(htmlElement =>
         htmlElement.classList.contains('tab-row')
       );
+
       if (!hasTabs) {
         document.querySelector('.tab-list').removeChild(group);
       }

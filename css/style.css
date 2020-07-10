@@ -65,7 +65,6 @@ ul.themes li.theme {
   min-height: 33px;
   border-top: solid 1px #faf3f3;
   border-bottom: none;
-  padding: 0 10px;
 }
 
 .theme-classic {
@@ -102,7 +101,8 @@ ul.themes li.theme {
 .tab-desc {
   white-space: nowrap;
   overflow: hidden;
-  width: 380px;
+  /* width: 380px; */
+  width: calc(100% - 40px);
   display: block;
   text-overflow: ellipsis;
 }
@@ -125,6 +125,7 @@ ul.themes li.theme {
   -moz-transform: scale(1.1);
   -ms-transform: scale(1.1);
   -o-transform: scale(1.1);
+  padding-right: 10px;
 }
 
 .close-button i {
@@ -206,4 +207,8 @@ ul.themes li.theme {
 
 .hightlighted {
   background-color: silver;
+}
+
+.favicon {
+  padding-left: 10px;
 }
