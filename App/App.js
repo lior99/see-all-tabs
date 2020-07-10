@@ -23,9 +23,13 @@ const App = {
    * main entry point
    * */
 
-  init: async function() {
+  init: async function({ settings }) {
     this.registerEvents();
-    this.listOfTabs = await this.getTabsList();
+
+    const { onlyCurrentWindow: showOnlyCurrentWindow } = settings;
+
+    this.listOfTabs = await this.getTabsList(showOnlyCurrentWindow);
+
     this.displayList({ tabsList: this.listOfTabs });
     document.querySelector('.filterBox').focus();
     this.tabsCount = this.calcTabsCount({ groupOfTabs: this.listOfTabs });
@@ -35,11 +39,17 @@ const App = {
    * Get list of all open tabs using chrome's own getAll method
    * */
 
-  getTabsList: function() {
+  getTabsList: function(showOnlyCurrentWindow = false) {
     return new Promise(resolve => {
-      chrome.windows.getAll({ populate: true }, listOfWindows => {
-        resolve(listOfWindows);
-      });
+      if (showOnlyCurrentWindow) {
+        chrome.windows.getCurrent({ populate: true }, listOfWindows => {
+          resolve(listOfWindows);
+        });  
+      } else {
+        chrome.windows.getAll({ populate: true }, listOfWindows => {
+          resolve(listOfWindows);
+        });
+      }
     });
   },
 
@@ -76,26 +86,48 @@ const App = {
    * render the tab list object
    * @param {array} tabList - array of open tabs
    */
-  displayList: function({ tabsList }) {
+  displayList: async function({ tabsList }) {
     const tabListDomElement = document.querySelector('.tab-list');
+
+    if (!Array.isArray(tabsList)) {
+      tabsList = [tabsList];
+    }
+
+    const currentWindowId = await this.getCurrentWindow();
+
+    tabsList.sort((a, b) => {
+      return (a.id === currentWindowId) ? -1 : 1;
+    })
 
     tabsList.forEach((chromeWindow, index) => {
       const tabRowFragment = document.createDocumentFragment();
 
       chromeWindow.tabs.forEach(tab => {
-        tabRowFragment.appendChild(this.buildTabRow({ tab }));
+        tabRowFragment.appendChild(this.buildTabRow({ tab, currentWindowId, onlyTabInWindow: chromeWindow.tabs.length === 1 }));
       });
 
       if (tabsList.length > 1 && chromeWindow.tabs.length > 0) {
-        const group = this.buildWindowsGroup({
-          chromeWindow,
-          tabRowFragment,
-          windowIndex: index + 1
-        });
-        tabListDomElement.appendChild(group);
+          const group = this.buildWindowsGroup({
+            chromeWindow,
+            tabRowFragment,
+            windowIndex: index + 1,
+            windowId: window.id,
+            isCurrentWindow: chromeWindow.id === currentWindowId
+          });
+        
+          tabListDomElement.appendChild(group);
+
       } else {
         tabListDomElement.appendChild(tabRowFragment);
       }
+    });
+  },
+
+  getCurrentWindow: function() {
+    return new Promise(resolve => {
+      chrome.windows.getCurrent({}, currentWindow => {
+        resolve(currentWindow.id);
+      });
     });
   },
 
@@ -107,17 +139,21 @@ const App = {
    * @param {object} tabRowFragment - html fragment
    * @param {number} windowIndex - index of the current window (window1, window2, etc.)
    */
-  buildWindowsGroup: function({ chromeWindow, tabRowFragment, windowIndex }) {
+  buildWindowsGroup: function({ chromeWindow, tabRowFragment, windowIndex, windowId, isCurrentWindow }) {
     const group = document.createElement('div');
     group.className = `group ${chromeWindow.incognito ? 'incognito' : ''}`;
 
     const groupTitle = document.createElement('div');
-    groupTitle.className = 'group-title';
-    const currentWindowId =
-      chromeWindow.tabs.length > 0
-        ? chromeWindow.tabs[0].windowId
-        : windowIndex;
-    groupTitle.textContent = `window ${windowIndex}`;
+
+    const currentWindowId = windowId;
+
+    if (isCurrentWindow) {
+      groupTitle.textContent = `This Window`;
+      groupTitle.className = 'group-title current';
+    } else {
+      groupTitle.textContent = `window ${windowIndex}`;
+      groupTitle.className = 'group-title';
+    }
 
     if (chromeWindow.incognito) {
       const img = document.createElement('img');
@@ -143,8 +179,9 @@ const App = {
    * create a tab row as div in the UI
    * @param {object} tab - chrome's tab object
    */
-  buildTabRow: function({ tab }) {
-    const active = tab.active ? 'active' : '';
+  buildTabRow: function({ tab, currentWindowId, onlyTabInWindow }) {
+    console.log('tab', tab);
+    const active = tab.active && tab.windowId === currentWindowId && !onlyTabInWindow ? 'active' : '';
 
     const tabRow = document.createElement('div');
     tabRow.className = `tab-row ${active}`;
