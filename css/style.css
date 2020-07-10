@@ -92,10 +92,11 @@ ul.themes li.theme {
   font-size: 0.8rem;
   margin-left: 5px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   flex-direction: row;
   width: calc(100% - 40px);
+  max-width: calc(100% - 40px);
 }
 
 .tab-desc {
@@ -117,15 +118,17 @@ ul.themes li.theme {
 
 
 .close-button {
-  display: flex;
+  /* display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center; */
   transform: scale(1.1);
   -webkit-transform: scale(1.1);
   -moz-transform: scale(1.1);
   -ms-transform: scale(1.1);
   -o-transform: scale(1.1);
-  padding-right: 10px;
+  /* padding-right: 10px; */
+  position: absolute;
+  right: 20px;
 }
 
 .close-button i {
