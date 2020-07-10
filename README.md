@@ -7,7 +7,13 @@ This extention allows easy switching tabs, toggle mute/unmute a tab and closing 
 
 
 Changelog:
-* version 2.1.2 - now supports closing a tab widht middle mouse button
-* version 3 - <br/>
-        :bug: - fix bug allowing search of case insensitive both title and url   
-        :fire: - enable support for keyboard navigation  
+* version 2.1.2 : now supports closing a tab widht middle mouse button
+* version 3 : <br/>
+         - fix bug allowing search of case insensitive both title and url   
+         - enable support for keyboard navigation
+         
+* version 3.1.0 :
+        <br/>
+        - add user options to allow changing user settings
+        <br />
+        - current window is always on top
