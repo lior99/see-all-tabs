@@ -2,20 +2,19 @@
 Display all tabs as a list, with filter.
 This extention allows easy switching tabs, toggle mute/unmute a tab and closing it.
 
+## installation instuctions
 
-## Install from the chrome store: https://chrome.google.com/webstore/detail/list-all-tabs/iklkoalaepbjckknpnklbipmplnipcid  
+### Install from the chrome store: https://chrome.google.com/webstore/detail/list-all-tabs/iklkoalaepbjckknpnklbipmplnipcid  
 
 
-Changelog:
-* version 2.1.2 : now supports closing a tab widht middle mouse button
-* version 3 : <br/>
-         - fix bug allowing search of case insensitive both title and url   
-         - enable support for keyboard navigation
-         
-* version 3.1.0 :
-        <br/>
-        - add user options to allow changing user settings
-        <br />
-        - current window is always on top
-        <br/>
-        - Dark mode! (experimental)
+---
+
+**Change Log** - [Change log](CHANGELOG.MD)
+
+---
+### Contributors:
+
+Lior Shtivelman <lior99apps@gmail.com>
+
+
+
