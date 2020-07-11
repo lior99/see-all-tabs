@@ -26,7 +26,11 @@ const App = {
   init: async function({ settings }) {
     this.registerEvents();
 
-    const { onlyCurrentWindow: showOnlyCurrentWindow } = settings;
+    const { onlyCurrentWindow: showOnlyCurrentWindow, darkModeOn } = settings;
+
+    if (darkModeOn) {
+      document.body.classList.add('dark-mode');
+    }
 
     this.listOfTabs = await this.getTabsList(showOnlyCurrentWindow);
 
@@ -123,6 +127,9 @@ const App = {
     });
   },
 
+  /**
+   * Gets the current active window
+   */
   getCurrentWindow: function() {
     return new Promise(resolve => {
       chrome.windows.getCurrent({}, currentWindow => {
@@ -138,6 +145,8 @@ const App = {
    * @param {object} chromeWindow - chrome object containing tab data
    * @param {object} tabRowFragment - html fragment
    * @param {number} windowIndex - index of the current window (window1, window2, etc.)
+   * @param {number} windowId - id of chrome window
+   * @param {boolean} isCurrentWindow - flag is the chrome window the active one
    */
   buildWindowsGroup: function({ chromeWindow, tabRowFragment, windowIndex, windowId, isCurrentWindow }) {
     const group = document.createElement('div');
@@ -178,6 +187,8 @@ const App = {
   /**
    * create a tab row as div in the UI
    * @param {object} tab - chrome's tab object
+   * @param {number} currentWindowId - id of current window
+   * @param {boolean} onlyTabInWindow - is there only one tab in the window, if yes than don't style it as active
    */
   buildTabRow: function({ tab, currentWindowId, onlyTabInWindow }) {
     const active = tab.active && tab.windowId === currentWindowId && !onlyTabInWindow ? 'active' : '';
@@ -186,6 +197,9 @@ const App = {
     tabRow.className = `tab-row ${active}`;
     tabRow.dataset.tabId = tab.id;
     tabRow.dataset.windowId = tab.windowId;
+
+    const activePlaceHolder = this.createActivePlaceHolder(active);
+    tabRow.appendChild(activePlaceHolder);
 
     const favIcon = this.createFavIcon({ tab });
     tabRow.appendChild(favIcon);
@@ -198,6 +212,18 @@ const App = {
 
     return tabRow;
   },
+
+
+  /**
+   * Create a box to display active indicator
+   */
+  createActivePlaceHolder: function() {
+    const placeHolder = document.createElement('div');
+    placeHolder.className = 'place-holder';
+    
+    return placeHolder;
+  },
+
 
   /**
    * create a div containing the title of tab
@@ -240,12 +266,7 @@ const App = {
     const closeButtonDiv = document.createElement('div');
     closeButtonDiv.className = 'close-button';
     closeButtonDiv.dataset.type = 'closeButton';
-
-    const closeButtonImage = document.createElement('img');
-    closeButtonImage.src = CLOSE_BUTTON.src;
-    closeButtonImage.dataset.type = CLOSE_BUTTON.type;
-
-    closeButtonDiv.appendChild(closeButtonImage);
+   
     return closeButtonDiv;
   },
 
@@ -255,38 +276,11 @@ const App = {
    */
   createSpeakerIcon: function(params) {
     const { tab } = params;
-
-    const speakerVisible = !tab.audible ? 'hidden' : '';
-    let speakerImg;
-    let mutedSpeakerImg;
-
-    if (tab.audible) {
-      speakerImg = `display: ${tab.mutedInfo.muted ? 'none' : 'block'}`;
-      mutedSpeakerImg = `display: ${tab.mutedInfo.muted ? 'block' : 'none'}`;
-    } else {
-      speakerImg = 'display: none';
-      mutedSpeakerImg = 'display:none';
-    }
-
     const speakerSpan = document.createElement('span');
-    speakerSpan.className = `speaker ${speakerVisible}`;
+    
+    speakerSpan.className = `speaker ${tab.audible ? tab.mutedInfo.muted ? 'volume-mute' : 'volume-up' : ''}`;
+    speakerSpan.dataset.type = SPEAKER.type;
 
-    const speakerImage = document.createElement('img');
-    speakerImage.src = SPEAKER.src;
-    speakerImage.alt = SPEAKER.alt;
-    speakerImage.dataset.type = SPEAKER.type;
-    speakerImage.style = speakerImg;
-
-    speakerSpan.append(speakerImage);
-
-    const mutedSpeakerImgElement = document.createElement('img');
-    mutedSpeakerImgElement.src = MUTED_SPEAKER.src;
-    mutedSpeakerImgElement.alt = MUTED_SPEAKER.alt;
-    mutedSpeakerImgElement.dataset.type = MUTED_SPEAKER.type;
-    mutedSpeakerImgElement.style = mutedSpeakerImg;
-
-    speakerSpan.append(speakerImage);
-    speakerSpan.append(mutedSpeakerImgElement);
     return speakerSpan;
   },
 
@@ -322,16 +316,18 @@ const App = {
       return;
     }
 
+    debugger;
     const { tabId, windowId } = this.getTabData(event);
     const tagName = event.target.tagName.toLowerCase();
     const type = event.target.dataset.type;
 
-    if (tagName === 'img' && type === 'speaker') {
+    if (type === 'speaker') {
       this.toggleMute(tabId);
       return;
     }
 
-    if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
+    // if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
+    if (type === 'closeButton') {
       this.removeTabFromList(tabId);
       this.closeTab(tabId);
     } else {
@@ -447,10 +443,15 @@ const App = {
       tab => parseInt(tab.dataset.tabId) === parseInt(tabId)
     );
 
-    const tabTitle = tab.children[1];
-
-    tabTitle.children[0].children[0].style.display = muted ? 'none' : 'block';
-    tabTitle.children[0].children[1].style.display = muted ? 'block' : 'none';
+    
+    const speakerSpan = tab.children[2].children[0];
+    if (muted) {
+      speakerSpan.classList.remove('volume-up');
+      speakerSpan.classList.add('volume-mute');
+    } else {
+      speakerSpan.classList.remove('volume-mute');
+      speakerSpan.classList.add('volume-up');
+    }
   },
 
   /**

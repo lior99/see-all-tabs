@@ -22,9 +22,11 @@ const optionsHandler = {
   
   onSaveClick: () => {
     const onlyCurrentWindowInput = document.querySelector('#onlyCurrentWindow');
+    const darkThemeInput = document.querySelector('#darkTheme');
 
     const data = {
-      onlyCurrentWindow: onlyCurrentWindowInput.checked
+      onlyCurrentWindow: onlyCurrentWindowInput.checked,
+      darkModeOn: darkThemeInput.checked
     }
 
     chrome.storage.sync.set(data);

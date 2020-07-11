@@ -4,53 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-    }
-
-    .container .title {
-      background: #5C6BC0;
-      color: #fff;
-      font-weight: 700;
-      padding: 10px;
-      margin-bottom: 10px;
-      font-size: 30px;
-    }
-
-    .option  {
-      margin: 10px 20px;
-    }
-
-    .option .description {
-      font-weight: bold;
-      font-size: 1rem;
-    }
-
-    .note {
-      font-weight: normal;
-      font-style: italic;
-    }
-
-  .buttons-container {
-    display: flex;
-    justify-content: flex-end;
-    width: 100%;
-    bottom: 20px;
-    position: fixed;
-    right: 20px;
-  }
-
-  #closeButton {
-    margin-left: 30px;
-  }
-
-  .grayed-out {
-    color: #c0c0c0;
-  }
-
-  </style>
+  <link rel="stylesheet" href="./css/options_style.css">
 </head>
 <body>
   <div class="container">
@@ -58,20 +12,20 @@
       List all tabs Extension options
     </div>
     <div class="option">
+      <input type="checkbox" value="false" id="onlyCurrentWindow" />
       <div class="description">
         Show only current active window
-        <input type="checkbox" value="false" id="onlyCurrentWindow" />
-      </div>
-      <div class="note">
-        (setting to true will show only the curent window, false will display a list of all open windows)
+        <div class="note">
+          (setting to true will show only the curent window, false will display a list of all open windows)
+        </div>
       </div>
     </div>
     </div>
     <div class="option">
-      <span class="description grayed-out">
+      <input type="checkbox" value="false" id="darkTheme" />
+      <span class="description">
         Dark mode (*experimental)
       </span>
-      <input type="checkbox" value="false" id="darkTheme" disabled />
     </div>
     <div class="buttons-container">
       <button id="saveButton">Save</button>

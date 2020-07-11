@@ -17,3 +17,5 @@ Changelog:
         - add user options to allow changing user settings
         <br />
         - current window is always on top
+        <br/>
+        - Dark mode! (experimental)
