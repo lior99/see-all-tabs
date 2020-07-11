@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "List All Tabs",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "description": "show a list of all open tabs",
   "short_name": "List All Tabs",
   "author": "Lior Shtivelman",
