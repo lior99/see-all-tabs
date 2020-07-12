@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="./css/options_style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="title">
+      List all tabs Extension options
+    </div>
+    <div class="option">
+      <input type="checkbox" value="false" id="onlyCurrentWindow" />
+      <div class="description">
+        Show only current active window
+        <div class="note">
+          (setting to true will show only the curent window, false will display a list of all open windows)
+        </div>
+      </div>
+    </div>
+    </div>
+    <div class="option">
+      <input type="checkbox" value="false" id="darkTheme" />
+      <span class="description">
+        Dark mode (*experimental)
+      </span>
+    </div>
+    <div class="buttons-container">
+      <button id="saveButton">Save</button>
+      <button id="closeButton">Close</button>
+    </div>
+  </div>
+
+  <script src="App/options.js"></script>
+</body>
+</html>

@@ -23,9 +23,17 @@ const App = {
    * main entry point
    * */
 
-  init: async function() {
+  init: async function({ settings }) {
     this.registerEvents();
-    this.listOfTabs = await this.getTabsList();
+
+    const { onlyCurrentWindow: showOnlyCurrentWindow, darkModeOn } = settings;
+
+    if (darkModeOn) {
+      document.body.classList.add('dark-mode');
+    }
+
+    this.listOfTabs = await this.getTabsList(showOnlyCurrentWindow);
+
     this.displayList({ tabsList: this.listOfTabs });
     document.querySelector('.filterBox').focus();
     this.tabsCount = this.calcTabsCount({ groupOfTabs: this.listOfTabs });
@@ -35,11 +43,17 @@ const App = {
    * Get list of all open tabs using chrome's own getAll method
    * */
 
-  getTabsList: function() {
+  getTabsList: function(showOnlyCurrentWindow = false) {
     return new Promise(resolve => {
-      chrome.windows.getAll({ populate: true }, listOfWindows => {
-        resolve(listOfWindows);
-      });
+      if (showOnlyCurrentWindow) {
+        chrome.windows.getCurrent({ populate: true }, listOfWindows => {
+          resolve(listOfWindows);
+        });  
+      } else {
+        chrome.windows.getAll({ populate: true }, listOfWindows => {
+          resolve(listOfWindows);
+        });
+      }
     });
   },
 
@@ -76,26 +90,51 @@ const App = {
    * render the tab list object
    * @param {array} tabList - array of open tabs
    */
-  displayList: function({ tabsList }) {
+  displayList: async function({ tabsList }) {
     const tabListDomElement = document.querySelector('.tab-list');
+
+    if (!Array.isArray(tabsList)) {
+      tabsList = [tabsList];
+    }
+
+    const currentWindowId = await this.getCurrentWindow();
+
+    tabsList.sort((a, b) => {
+      return (a.id === currentWindowId) ? -1 : 1;
+    })
 
     tabsList.forEach((chromeWindow, index) => {
       const tabRowFragment = document.createDocumentFragment();
 
       chromeWindow.tabs.forEach(tab => {
-        tabRowFragment.appendChild(this.buildTabRow({ tab }));
+        tabRowFragment.appendChild(this.buildTabRow({ tab, currentWindowId, onlyTabInWindow: chromeWindow.tabs.length === 1 }));
       });
 
       if (tabsList.length > 1 && chromeWindow.tabs.length > 0) {
-        const group = this.buildWindowsGroup({
-          chromeWindow,
-          tabRowFragment,
-          windowIndex: index + 1
-        });
-        tabListDomElement.appendChild(group);
+          const group = this.buildWindowsGroup({
+            chromeWindow,
+            tabRowFragment,
+            windowIndex: index + 1,
+            windowId: window.id,
+            isCurrentWindow: chromeWindow.id === currentWindowId
+          });
+        
+          tabListDomElement.appendChild(group);
+
       } else {
         tabListDomElement.appendChild(tabRowFragment);
       }
+    });
+  },
+
+  /**
+   * Gets the current active window
+   */
+  getCurrentWindow: function() {
+    return new Promise(resolve => {
+      chrome.windows.getCurrent({}, currentWindow => {
+        resolve(currentWindow.id);
+      });
     });
   },
 
@@ -106,18 +145,24 @@ const App = {
    * @param {object} chromeWindow - chrome object containing tab data
    * @param {object} tabRowFragment - html fragment
    * @param {number} windowIndex - index of the current window (window1, window2, etc.)
+   * @param {number} windowId - id of chrome window
+   * @param {boolean} isCurrentWindow - flag is the chrome window the active one
    */
-  buildWindowsGroup: function({ chromeWindow, tabRowFragment, windowIndex }) {
+  buildWindowsGroup: function({ chromeWindow, tabRowFragment, windowIndex, windowId, isCurrentWindow }) {
     const group = document.createElement('div');
     group.className = `group ${chromeWindow.incognito ? 'incognito' : ''}`;
 
     const groupTitle = document.createElement('div');
-    groupTitle.className = 'group-title';
-    const currentWindowId =
-      chromeWindow.tabs.length > 0
-        ? chromeWindow.tabs[0].windowId
-        : windowIndex;
-    groupTitle.textContent = `window ${windowIndex}`;
+
+    const currentWindowId = windowId;
+
+    if (isCurrentWindow) {
+      groupTitle.textContent = `This Window`;
+      groupTitle.className = 'group-title current';
+    } else {
+      groupTitle.textContent = `window ${windowIndex}`;
+      groupTitle.className = 'group-title';
+    }
 
     if (chromeWindow.incognito) {
       const img = document.createElement('img');
@@ -142,14 +187,19 @@ const App = {
   /**
    * create a tab row as div in the UI
    * @param {object} tab - chrome's tab object
+   * @param {number} currentWindowId - id of current window
+   * @param {boolean} onlyTabInWindow - is there only one tab in the window, if yes than don't style it as active
    */
-  buildTabRow: function({ tab }) {
-    const active = tab.active ? 'active' : '';
+  buildTabRow: function({ tab, currentWindowId, onlyTabInWindow }) {
+    const active = tab.active && tab.windowId === currentWindowId && !onlyTabInWindow ? 'active' : '';
 
     const tabRow = document.createElement('div');
     tabRow.className = `tab-row ${active}`;
     tabRow.dataset.tabId = tab.id;
     tabRow.dataset.windowId = tab.windowId;
+
+    const activePlaceHolder = this.createActivePlaceHolder(active);
+    tabRow.appendChild(activePlaceHolder);
 
     const favIcon = this.createFavIcon({ tab });
     tabRow.appendChild(favIcon);
@@ -162,6 +212,18 @@ const App = {
 
     return tabRow;
   },
+
+
+  /**
+   * Create a box to display active indicator
+   */
+  createActivePlaceHolder: function() {
+    const placeHolder = document.createElement('div');
+    placeHolder.className = 'place-holder';
+    
+    return placeHolder;
+  },
+
 
   /**
    * create a div containing the title of tab
@@ -204,12 +266,7 @@ const App = {
     const closeButtonDiv = document.createElement('div');
     closeButtonDiv.className = 'close-button';
     closeButtonDiv.dataset.type = 'closeButton';
-
-    const closeButtonImage = document.createElement('img');
-    closeButtonImage.src = CLOSE_BUTTON.src;
-    closeButtonImage.dataset.type = CLOSE_BUTTON.type;
-
-    closeButtonDiv.appendChild(closeButtonImage);
+   
     return closeButtonDiv;
   },
 
@@ -219,38 +276,11 @@ const App = {
    */
   createSpeakerIcon: function(params) {
     const { tab } = params;
-
-    const speakerVisible = !tab.audible ? 'hidden' : '';
-    let speakerImg;
-    let mutedSpeakerImg;
-
-    if (tab.audible) {
-      speakerImg = `display: ${tab.mutedInfo.muted ? 'none' : 'block'}`;
-      mutedSpeakerImg = `display: ${tab.mutedInfo.muted ? 'block' : 'none'}`;
-    } else {
-      speakerImg = 'display: none';
-      mutedSpeakerImg = 'display:none';
-    }
-
     const speakerSpan = document.createElement('span');
-    speakerSpan.className = `speaker ${speakerVisible}`;
+    
+    speakerSpan.className = `speaker ${tab.audible ? tab.mutedInfo.muted ? 'volume-mute' : 'volume-up' : ''}`;
+    speakerSpan.dataset.type = SPEAKER.type;
 
-    const speakerImage = document.createElement('img');
-    speakerImage.src = SPEAKER.src;
-    speakerImage.alt = SPEAKER.alt;
-    speakerImage.dataset.type = SPEAKER.type;
-    speakerImage.style = speakerImg;
-
-    speakerSpan.append(speakerImage);
-
-    const mutedSpeakerImgElement = document.createElement('img');
-    mutedSpeakerImgElement.src = MUTED_SPEAKER.src;
-    mutedSpeakerImgElement.alt = MUTED_SPEAKER.alt;
-    mutedSpeakerImgElement.dataset.type = MUTED_SPEAKER.type;
-    mutedSpeakerImgElement.style = mutedSpeakerImg;
-
-    speakerSpan.append(speakerImage);
-    speakerSpan.append(mutedSpeakerImgElement);
     return speakerSpan;
   },
 
@@ -286,16 +316,18 @@ const App = {
       return;
     }
 
+    debugger;
     const { tabId, windowId } = this.getTabData(event);
     const tagName = event.target.tagName.toLowerCase();
     const type = event.target.dataset.type;
 
-    if (tagName === 'img' && type === 'speaker') {
+    if (type === 'speaker') {
       this.toggleMute(tabId);
       return;
     }
 
-    if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
+    // if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
+    if (type === 'closeButton') {
       this.removeTabFromList(tabId);
       this.closeTab(tabId);
     } else {
@@ -346,7 +378,7 @@ const App = {
    * @param {event} event - on click event
    */
   getTabData: function(event) {
-    let currentElement = event.target;
+    let currentElement = event.srcElement;
     let elementType = currentElement.tagName.toLowerCase();
 
     while (
@@ -389,9 +421,11 @@ const App = {
     } else {
       group.removeChild(tab);
       const children = [...group.children];
+      
       const hasTabs = children.some(htmlElement =>
         htmlElement.classList.contains('tab-row')
       );
+
       if (!hasTabs) {
         document.querySelector('.tab-list').removeChild(group);
       }
@@ -409,10 +443,15 @@ const App = {
       tab => parseInt(tab.dataset.tabId) === parseInt(tabId)
     );
 
-    const tabTitle = tab.children[1];
-
-    tabTitle.children[0].children[0].style.display = muted ? 'none' : 'block';
-    tabTitle.children[0].children[1].style.display = muted ? 'block' : 'none';
+    
+    const speakerSpan = tab.children[2].children[0];
+    if (muted) {
+      speakerSpan.classList.remove('volume-up');
+      speakerSpan.classList.add('volume-mute');
+    } else {
+      speakerSpan.classList.remove('volume-mute');
+      speakerSpan.classList.add('volume-up');
+    }
   },
 
   /**

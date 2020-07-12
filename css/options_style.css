@@ -1,0 +1,49 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.container .title {
+  background: #5c6bc0;
+  color: #fff;
+  font-weight: 700;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 30px;
+}
+
+.option {
+  margin: 10px 20px;
+  display: flex;
+}
+
+.option .description {
+  font-weight: bold;
+  font-size: 1rem;
+  margin-left: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.description .note {
+  font-weight: normal;
+  font-style: italic;
+}
+
+.buttons-container {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  bottom: 20px;
+  position: fixed;
+  right: 20px;
+}
+
+#closeButton {
+  margin-left: 30px;
+}
+
+.grayed-out {
+  color: #c0c0c0;
+}
