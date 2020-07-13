@@ -18,21 +18,23 @@ const App = {
   isInFilterMode: false,
   filteredResultsLength: 0,
   tabsCount: 0,
+  showOnlyCurrentWindow: false,
 
   /**
    * main entry point
    * */
 
   init: async function({ settings }) {
-    this.registerEvents();
+    const { onlyCurrentWindow, darkModeOn } = settings;
 
-    const { onlyCurrentWindow: showOnlyCurrentWindow, darkModeOn } = settings;
+    this.showOnlyCurrentWindow = onlyCurrentWindow;
 
     if (darkModeOn) {
       document.body.classList.add('dark-mode');
     }
 
-    this.listOfTabs = await this.getTabsList(showOnlyCurrentWindow);
+    this.registerEvents();
+    this.listOfTabs = await this.getTabsList(this.showOnlyCurrentWindow);
 
     this.displayList({ tabsList: this.listOfTabs });
     document.querySelector('.filterBox').focus();
@@ -289,7 +291,12 @@ const App = {
    */
   clearFilter: function() {
     document.querySelector('.filterBox').value = '';
-    document.querySelector('.tab-list').textContent = '';
+    const tabListElement = document.querySelector('.tab-list');
+
+    while(tabListElement.firstChild) {
+      tabListElement.removeChild(tabListElement.firstChild);
+    }
+
     this.displayList({ tabsList: this.listOfTabs });
     this.isInFilterMode = false;
   },
@@ -299,9 +306,17 @@ const App = {
    * @param {event} event - mouse down event
    */
   onMouseDown: function(event) {
-    const isMiddleButtonDown = event.which === 2;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const isMiddleButtonDown = event.button === 1;
+
     if (isMiddleButtonDown) {
       const { tabId } = this.getTabData(event);
+      if (!tabId) {
+        return;
+      }
+
       this.removeTabFromList(tabId);
       this.closeTab(tabId);
     }
@@ -312,16 +327,16 @@ const App = {
    * @param {event} event - onClick event
    */
   onTabListClick: function(event) {
-    if (event.target.id === 'tabList') {
-      return;
-    }
+    // if (event.currentTarget.id === 'tabList') {
+    //   alert('inside')
+    //   return;
+    // }
 
-    debugger;
     const { tabId, windowId } = this.getTabData(event);
     const tagName = event.target.tagName.toLowerCase();
     const type = event.target.dataset.type;
 
-    if (type === 'speaker') {
+    if (type === 'speakerer') {
       this.toggleMute(tabId);
       return;
     }
@@ -378,8 +393,12 @@ const App = {
    * @param {event} event - on click event
    */
   getTabData: function(event) {
-    let currentElement = event.srcElement;
+    let currentElement = event.target;
     let elementType = currentElement.tagName.toLowerCase();
+
+    if (currentElement.classList.contains('tab-list')) {
+      return {};
+    }
 
     while (
       elementType !== 'div' ||
@@ -402,6 +421,16 @@ const App = {
   closeTab: function(tabId) {
     chrome.tabs.remove(tabId);
     this.tabsCount = this.calcTabsCount({ groupOfTabs: this.listOfTabs });
+    
+    
+
+    this.listOfTabs.some(chromeWindow => {
+      const index = chromeWindow.tabs.findIndex(tab => tab.id === tabId);
+      if (index !== -1) {
+        chromeWindow.tabs.splice(index, 1)
+        return;
+      }
+    })
   },
 
   /**
@@ -422,12 +451,14 @@ const App = {
       group.removeChild(tab);
       const children = [...group.children];
       
-      const hasTabs = children.some(htmlElement =>
-        htmlElement.classList.contains('tab-row')
-      );
-
-      if (!hasTabs) {
-        document.querySelector('.tab-list').removeChild(group);
+      if (children.legnth > 0) {
+        const hasTabs = children.some(htmlElement =>
+          htmlElement.classList.contains('tab-row')
+        );
+  
+        if (!hasTabs) {
+          document.querySelector('.tab-list').removeChild(group);
+        }
       }
     }
   },
