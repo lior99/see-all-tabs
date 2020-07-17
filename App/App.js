@@ -346,6 +346,9 @@ const App = {
       this.removeTabFromList(tabId);
       this.closeTab(tabId);
     } else {
+      if (!tabId) {
+        return;
+      }
       this.setActiveTab({ tabId, windowId });
     }
   },
@@ -419,18 +422,23 @@ const App = {
    * @param {number} tabId - the tab the user clicked on closing
    */
   closeTab: function(tabId) {
-    chrome.tabs.remove(tabId);
-    this.tabsCount = this.calcTabsCount({ groupOfTabs: this.listOfTabs });
-    
-    
 
-    this.listOfTabs.some(chromeWindow => {
-      const index = chromeWindow.tabs.findIndex(tab => tab.id === tabId);
-      if (index !== -1) {
-        chromeWindow.tabs.splice(index, 1)
-        return;
+    chrome.tabs.remove(tabId, () => {
+      if (!Array.isArray(this.listOfTabs)) {
+        this.listOfTabs = [this.listOfTabs];
       }
-    })
+  
+      this.listOfTabs.some(chromeWindow => {
+        const index = chromeWindow.tabs.findIndex(tab => tab.id === tabId);
+        if (index !== -1) {
+          chromeWindow.tabs.splice(index, 1)
+          return;
+        }
+      })
+
+      this.tabsCount = this.calcTabsCount({ groupOfTabs: this.listOfTabs });
+    });
+
   },
 
   /**
@@ -496,25 +504,39 @@ const App = {
       keyCode === ARROW_UP ||
       keyCode === ENTER_KEY ||
       keyCode === ARROW_LEFT ||
-      keyCode === ARROW_RIGHT
+      keyCode === ARROW_RIGHT ||
+      keyCode === 133
     ) {
       return;
     }
 
     const valueToFilterBy = event.target.value.toLowerCase();
+    let filteredList;
 
-    const filteredList = this.listOfTabs.map(group => {
-      const tabs = group.tabs.filter(tab => {
+    if (this.showOnlyCurrentWindow) {
+      filteredList = this.listOfTabs.tabs.filter(tab => {
         return (
           tab.title.toLowerCase().indexOf(valueToFilterBy) > -1 ||
           tab.url.toLowerCase().indexOf(valueToFilterBy) > -1
         );
+      });      
+    } else {
+      filteredList = this.listOfTabs.map(group => {
+        const tabs = group.tabs.filter(tab => {
+          return (
+            tab.title.toLowerCase().indexOf(valueToFilterBy) > -1 ||
+            tab.url.toLowerCase().indexOf(valueToFilterBy) > -1
+          );
+        });
+  
+        return Object.assign({}, group, {
+          tabs
+        });
       });
+    }
 
-      return Object.assign({}, group, {
-        tabs
-      });
-    });
+    debugger;
+
 
     this.displayFilteredList(filteredList);
     this.highlightedTab = -1;
@@ -584,6 +606,10 @@ const App = {
    * calculate how many open tabs are there including all open windows
    */
   calcTabsCount: function({ groupOfTabs }) {
+    if(!Array.isArray(groupOfTabs)) {
+      groupOfTabs = [groupOfTabs]
+    }
+    
     if (groupOfTabs.length === 1) {
       return groupOfTabs[0].tabs.length;
     }

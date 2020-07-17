@@ -1,7 +1,6 @@
 @font-face {
-  font-family: "Fira Sans";
-  src: url("/fonts/Fira_Sans/FiraSans-Regular.ttf") format("truetype");
-  src: url("/fonts/Fira_Sans/FiraSans-Medium.ttf") format("truetype");
+  font-family: "Roboto";
+  src: url("/fonts/Roboto/Roboto-Regular.ttf") format("truetype");
 }
 
 body,
@@ -9,7 +8,7 @@ html {
   margin: 0;
   padding: 0;
   font-size: 16px;
-  font-family: "Arial";
+  font-family: "Roboto", sans-serif;
 }
 
 .dark-mode {
@@ -176,7 +175,7 @@ ul.themes li.theme {
   content: url('../images/svg/volume-up-solid.svg');
   visibility: visible;
   filter: invert(1);
-  -webkit-filter:;
+  -webkit-filter: invert(1);
 }
 
 .dark-mode .speaker.volume-mute::after {
