@@ -48,8 +48,10 @@ const App = {
   getTabsList: function(showOnlyCurrentWindow = false) {
     return new Promise(resolve => {
       if (showOnlyCurrentWindow) {
-        chrome.windows.getCurrent({ populate: true }, listOfWindows => {
-          resolve(listOfWindows);
+        chrome.windows.getCurrent({ populate: true }, window => {
+          chrome.tabs.getAllInWindow(window.id, tabs => {
+            resolve(tabs);
+          })
         });  
       } else {
         chrome.windows.getAll({ populate: true }, listOfWindows => {
@@ -94,39 +96,58 @@ const App = {
    */
   displayList: async function({ tabsList }) {
     const tabListDomElement = document.querySelector('.tab-list');
-
-    if (!Array.isArray(tabsList)) {
-      tabsList = [tabsList];
-    }
-
     const currentWindowId = await this.getCurrentWindow();
 
-    tabsList.sort((a, b) => {
-      return (a.id === currentWindowId) ? -1 : 1;
-    })
+    // if (!Array.isArray(tabsList)) {
+    //   tabsList = [tabsList];
+    // }
 
-    tabsList.forEach((chromeWindow, index) => {
-      const tabRowFragment = document.createDocumentFragment();
+    if (this.showOnlyCurrentWindow) {
+      const domFragment = this.displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId })
+      tabListDomElement.appendChild(domFragment);
+    } else {
+      tabsList.sort((a, b) => {
+        return (a.id === currentWindowId) ? -1 : 1;
+      })
 
-      chromeWindow.tabs.forEach(tab => {
-        tabRowFragment.appendChild(this.buildTabRow({ tab, currentWindowId, onlyTabInWindow: chromeWindow.tabs.length === 1 }));
+      tabsList.forEach((chromeWindow, index) => {
+        const tabRowFragment = document.createDocumentFragment();
+  
+        chromeWindow.tabs.forEach(tab => {
+          tabRowFragment.appendChild(this.buildTabRow({ tab, currentWindowId, onlyTabInWindow: chromeWindow.tabs.length === 1 }));
+        });
+  
+        if (tabsList.length > 1 && chromeWindow.tabs.length > 0) {
+            const group = this.buildWindowsGroup({
+              chromeWindow,
+              tabRowFragment,
+              windowIndex: index + 1,
+              windowId: window.id,
+              isCurrentWindow: chromeWindow.id === currentWindowId
+            });
+          
+            tabListDomElement.appendChild(group);
+  
+        } else {
+          tabListDomElement.appendChild(tabRowFragment);
+        }
       });
+    }
+  },
 
-      if (tabsList.length > 1 && chromeWindow.tabs.length > 0) {
-          const group = this.buildWindowsGroup({
-            chromeWindow,
-            tabRowFragment,
-            windowIndex: index + 1,
-            windowId: window.id,
-            isCurrentWindow: chromeWindow.id === currentWindowId
-          });
-        
-          tabListDomElement.appendChild(group);
+  /**
+   * list of tabs without a group - only tabs in current window
+   * @param {array} tabs - all tabs in the window that invoked the extension
+   * @param {number} currentWindowId - current window id
+   */
+  displayListOfTabsInCurrentWindowOnly: function({ tabs, currentWindowId }) {
+    const tabRowFragment = document.createDocumentFragment();
 
-      } else {
-        tabListDomElement.appendChild(tabRowFragment);
-      }
+    tabs.forEach(tab => {
+      tabRowFragment.appendChild(this.buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1 }));
     });
+
+    return tabRowFragment;
   },
 
   /**
@@ -514,7 +535,7 @@ const App = {
     let filteredList;
 
     if (this.showOnlyCurrentWindow) {
-      filteredList = this.listOfTabs.tabs.filter(tab => {
+      filteredList = this.listOfTabs.filter(tab => {
         return (
           tab.title.toLowerCase().indexOf(valueToFilterBy) > -1 ||
           tab.url.toLowerCase().indexOf(valueToFilterBy) > -1
@@ -534,9 +555,6 @@ const App = {
         });
       });
     }
-
-    debugger;
-
 
     this.displayFilteredList(filteredList);
     this.highlightedTab = -1;
@@ -606,6 +624,11 @@ const App = {
    * calculate how many open tabs are there including all open windows
    */
   calcTabsCount: function({ groupOfTabs }) {
+    if (this.showOnlyCurrentWindow) {
+      return groupOfTabs.length;
+    }
+
+
     if(!Array.isArray(groupOfTabs)) {
       groupOfTabs = [groupOfTabs]
     }
