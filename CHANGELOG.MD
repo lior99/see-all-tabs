@@ -15,3 +15,6 @@
 ### v3.1.3:
         - Add Roboto font face
         - fix broken functionallity, i.e. missing files when uploading package to chrome store
+
+### v3.1.4:
+        - fix filter's broken functionallity
