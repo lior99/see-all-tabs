@@ -98,10 +98,6 @@ const App = {
     const tabListDomElement = document.querySelector('.tab-list');
     const currentWindowId = await this.getCurrentWindow();
 
-    // if (!Array.isArray(tabsList)) {
-    //   tabsList = [tabsList];
-    // }
-
     if (this.showOnlyCurrentWindow) {
       const domFragment = this.displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId })
       tabListDomElement.appendChild(domFragment);
@@ -348,21 +344,15 @@ const App = {
    * @param {event} event - onClick event
    */
   onTabListClick: function(event) {
-    // if (event.currentTarget.id === 'tabList') {
-    //   alert('inside')
-    //   return;
-    // }
-
     const { tabId, windowId } = this.getTabData(event);
     const tagName = event.target.tagName.toLowerCase();
     const type = event.target.dataset.type;
 
-    if (type === 'speakerer') {
+    if (type === 'speaker') {
       this.toggleMute(tabId);
       return;
     }
 
-    // if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
     if (type === 'closeButton') {
       this.removeTabFromList(tabId);
       this.closeTab(tabId);
@@ -559,9 +549,7 @@ const App = {
     this.displayFilteredList(filteredList);
     this.highlightedTab = -1;
     this.isInFilterMode = true;
-    this.filteredResultsLength = this.calcTabsCount({
-      groupOfTabs: filteredList
-    });
+    this.filteredResultsLength = (this.showOnlyCurrentWindow) ? filteredList.length : this.calcTabsCount({ groupOfTabs: filteredList });
   },
 
   onKeyboardButtonPress: function(event) {
