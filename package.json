@@ -1,0 +1,28 @@
+{
+  "name": "see-all-tabs",
+  "version": "3.1.4",
+  "description": "Display all tabs as a list with option to mute, close and filter them",
+  "main": "main.js",
+  "dependencies": {
+    "@babel/preset-env": "^7.10.4",
+    "babel-jest": "^26.1.0",
+    "jest": "^26.1.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "jest --watchAll"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lior99/see-all-tabs.git"
+  },
+  "author": "Lior Shtivelman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lior99/see-all-tabs/issues"
+  },
+  "homepage": "https://github.com/lior99/see-all-tabs#readme"
+}
