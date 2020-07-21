@@ -98,6 +98,8 @@ const App = {
     const tabListDomElement = document.querySelector('.tab-list');
     const currentWindowId = await this.getCurrentWindow();
 
+    console.log('this.showOnlyCurrentWindow',this.showOnlyCurrentWindow);
+
     if (this.showOnlyCurrentWindow) {
       const domFragment = this.displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId })
       tabListDomElement.appendChild(domFragment);

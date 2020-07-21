@@ -79,11 +79,32 @@ describe('checking extension functionallity', () => {
     }
   });
 
-  it.skip('should display a list of tabs when showOnlyCurrentWindow is true', () => {
+  it.only('should display a list of tabs when showOnlyCurrentWindow is true', async () => {
+    // mock results
+    const mockTablist = [
+      { id: 1, title: 'StackOverflow', url: 'http://www.stackoverflow.com' },
+      { id: 2, title: 'Github', url: 'http://www.github.com' }
+    ]
 
+    //mock chrome
+    global.chrome = {
+      windows: {
+        getCurrent: function(obj, callback) {
+          callback(100);
+        }
+      }
+    }
+
+    App.showOnlyCurrentWindow = true;
+    document.body.innerHTML = '<div class="tab-list"></div>';
+
+    await App.displayList({ tabList: mockTablist });
+    const tabListDomElement = document.querySelector('.tab-list');
+    //const domFragment = App.displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId })
+    //tabListDomElement.appendChild(domFragment);
   })
 
-  it.skip('should display a list of tabs when showOnlyCurrentWindow is false', () => {
+  it.skip('should display a list of tabs when showOnlyCurrentWindow is false', async () => {
 
   })
 });
