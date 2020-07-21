@@ -18,3 +18,6 @@
 
 ### v3.1.4:
         - fix filter's broken functionallity
+
+### 3.1.5:
+        - fix bugs and small changes
