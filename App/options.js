@@ -1,26 +1,37 @@
 const optionsHandler = {
-  start: function() {
-    const onLoad = () => {
-        const saveButton = document.querySelector('#saveButton');
-        const closeButton = document.querySelector('#closeButton'); 
-        this.registerEvents(saveButton, closeButton);
+  start(){
+    this.handleClick = this.handleClick.bind(this);
 
+    const onLoad = () => {
+        this.registerEvents();
         this.loadSettingsFromStorage();
     }
 
     window.addEventListener('DOMContentLoaded', onLoad);
   },
 
-  registerEvents: function (saveBtn, closeBtn) {
-    saveBtn.addEventListener('click', this.onSaveClick);
-    closeBtn.addEventListener('click', this.onCloseClick);
+  registerEvents() {
+    document.querySelector('body').addEventListener('click', this.handleClick);
   },
 
-  onCloseClick: () => {
+  unRegisterEvents() {
+    document.querySelector('body').removeEventListener('click', this.handleClick);
+  },
+
+  handleClick(event) {
+    if (event.target.type && event.target.type === 'checkbox') {
+      this.onCheckboxToggle();
+    } else if (event.target.id === 'closeButton') {
+      this.onCloseClick();
+    }
+  },
+
+  onCloseClick() {
+    this.unRegisterEvents();
     window.close();
   },
   
-  onSaveClick: () => {
+  onCheckboxToggle() {
     const onlyCurrentWindowInput = document.querySelector('#onlyCurrentWindow');
     const darkThemeInput = document.querySelector('#darkTheme');
 
@@ -32,7 +43,7 @@ const optionsHandler = {
     chrome.storage.sync.set(data);
   },
 
-  loadSettingsFromStorage: function() {
+  loadSettingsFromStorage() {
     chrome.storage.sync.get({
       onlyCurrentWindow: false,
       darkModeOn: false
@@ -41,7 +52,7 @@ const optionsHandler = {
     })
   },
 
-  setValuesOnPage: (values) => {
+  setValuesOnPage(values) {
     document.querySelector('#onlyCurrentWindow').checked = values.onlyCurrentWindow;
     document.querySelector('#darkTheme').checked = values.darkModeOn;
   }
