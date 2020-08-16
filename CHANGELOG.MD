@@ -21,3 +21,7 @@
 
 ### 3.1.5:
         - fix bugs and small changes
+
+### 3.1.6
+        - fix clicking on middle button on touchpad duplicates list
+        - fix filtering of tabs
