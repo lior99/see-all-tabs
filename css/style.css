@@ -11,8 +11,13 @@ html {
   font-family: "Roboto", sans-serif;
 }
 
+:root {
+  --dark-mode-background: rgb(26, 26, 26); 
+  --purple: #9C27B0;
+}
+
 .dark-mode {
-  background: rgb(26, 26, 26);
+  background: var(--dark-mode-background);
   color: #fff;
 }
 
@@ -88,7 +93,7 @@ ul.themes li.theme {
 }
 
 .dark-mode .tab-row:hover {
-  background: #9C27B0
+  background: var(--purple);
 }
 
 .tab-row img {
@@ -255,6 +260,10 @@ ul.themes li.theme {
 
 .hightlighted {
   background-color: silver;
+}
+
+.dark-mode .hightlighted {
+  background: var(--purple);
 }
 
 .favicon {
