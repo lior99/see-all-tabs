@@ -1,4 +1,5 @@
 import App from '../App';
+import { JestEnvironment } from '@jest/environment';
 
 // beforeEach(() => {
 //   const callback = (listOfWindows) => {
@@ -28,6 +29,47 @@ import App from '../App';
 
 //   jest.setTimeout(30000);
 // });
+
+
+function buildTabRowMock() {
+  const tabRow = document.createElement('div');
+  tabRow.dataset.tabId = '8';
+  tabRow.dataset.windowId = '1';
+
+  const placeHolder = document.createElement('div');
+  placeHolder.classList.add('place-holder');
+
+  tabRow.appendChild(placeHolder);
+
+  const favIcon = document.createElement('div');
+  const img = document.createElement('img');
+  img.src = "https://cdn.sstatic.net/Sites/stackoverflow/Img/favicon.ico?v=ec617d715196";
+
+  favIcon.appendChild(img);
+
+  tabRow.appendChild(favIcon);
+
+  const tabTitle = document.createElement('div');
+  const speakerSpan = document.createElement('span');
+  speakerSpan.className = 'speaker';
+  speakerSpan.dataset.type = 'speaker';
+  tabTitle.append(speakerSpan);
+
+  const tabDesc = document.createElement('span');
+  tabDesc.className = 'tab-desc';
+  tabDesc.textContent = 'Stack Overflow - Where Developers Learn, Share, &amp; Build Careers';
+  tabTitle.appendChild(tabDesc);
+
+  tabRow.appendChild(tabTitle);
+
+  const closeButtonDiv = document.createElement('div');
+  closeButtonDiv.className = 'close-button';
+  closeButtonDiv.dataset.type = 'closeButton';
+  tabRow.appendChild(closeButtonDiv);
+
+  return tabRow;
+}
+
 
 
 describe('checking extension functionallity', () => {
@@ -79,11 +121,11 @@ describe('checking extension functionallity', () => {
     }
   });
 
-  it.only('should display a list of tabs when showOnlyCurrentWindow is true', async () => {
+  it('should display a list of tabs when showOnlyCurrentWindow is true', async () => {
     // mock results
     const mockTablist = [
-      { id: 1, title: 'StackOverflow', url: 'http://www.stackoverflow.com' },
-      { id: 2, title: 'Github', url: 'http://www.github.com' }
+      { id: 1, title: 'Stack Overflow - Where Developers Learn, Share, & Build Careers', url: 'https://stackoverflow.com/' },
+      // { id: 2, title: 'Github', url: 'http://www.github.com' }
     ]
 
     //mock chrome
@@ -95,13 +137,24 @@ describe('checking extension functionallity', () => {
       }
     }
 
+    // mocking App
     App.showOnlyCurrentWindow = true;
+    App.displayListOfTabsInCurrentWindowOnly = jest.fn(() => {
+      const fragment = document.createDocumentFragment();
+
+      const mockTabRow = buildTabRowMock();
+
+      fragment.appendChild(mockTabRow);
+      return fragment;
+    });
+
     document.body.innerHTML = '<div class="tab-list"></div>';
 
-    await App.displayList({ tabList: mockTablist });
+    await App.displayList({ tabsList: mockTablist });
     const tabListDomElement = document.querySelector('.tab-list');
-    //const domFragment = App.displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId })
-    //tabListDomElement.appendChild(domFragment);
+
+    expect(App.displayListOfTabsInCurrentWindowOnly).toBeCalled();
+    expect(tabListDomElement.textContent).toEqual('Stack Overflow - Where Developers Learn, Share, &amp; Build Careers')
   })
 
   it.skip('should display a list of tabs when showOnlyCurrentWindow is false', async () => {
