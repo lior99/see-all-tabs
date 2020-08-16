@@ -1,13 +1,11 @@
 import {
   INCOGNITO_IMAGE,
-  MUTED_SPEAKER,
   SPEAKER,
   ARROW_DOWN,
   ARROW_UP,
   ENTER_KEY,
   ARROW_LEFT,
   ARROW_RIGHT,
-  CLOSE_BUTTON
 } from './consts.js';
 
 const App = {
@@ -28,6 +26,7 @@ const App = {
     const { onlyCurrentWindow, darkModeOn } = settings;
 
     this.showOnlyCurrentWindow = onlyCurrentWindow;
+    this.eventCounter = 0;
 
     if (darkModeOn) {
       document.body.classList.add('dark-mode');
@@ -97,10 +96,6 @@ const App = {
   displayList: async function({ tabsList }) {
     const tabListDomElement = document.querySelector('.tab-list');
     const currentWindowId = await this.getCurrentWindow();
-
-    // if (!Array.isArray(tabsList)) {
-    //   tabsList = [tabsList];
-    // }
 
     if (this.showOnlyCurrentWindow) {
       const domFragment = this.displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId })
@@ -327,8 +322,7 @@ const App = {
    * @param {event} event - mouse down event
    */
   onMouseDown: function(event) {
-    event.preventDefault();
-    event.stopPropagation();
+    event.stopImmediatePropagation();
 
     const isMiddleButtonDown = event.button === 1;
 
@@ -443,19 +437,25 @@ const App = {
    * @param {number} tabId - the tab the user clicked on closing
    */
   closeTab: function(tabId) {
-
     chrome.tabs.remove(tabId, () => {
       if (!Array.isArray(this.listOfTabs)) {
         this.listOfTabs = [this.listOfTabs];
       }
   
-      this.listOfTabs.some(chromeWindow => {
-        const index = chromeWindow.tabs.findIndex(tab => tab.id === tabId);
-        if (index !== -1) {
-          chromeWindow.tabs.splice(index, 1)
-          return;
-        }
-      })
+      if (this.showOnlyCurrentWindow) {
+          const index = this.listOfTabs.findIndex(tab => tab.id === tabId);
+          if (index !== -1) {
+            this.listOfTabs.splice(index, 1)
+          }
+      } else {
+        this.listOfTabs.some(chromeWindow => {
+          const index = chromeWindow.tabs.findIndex(tab => tab.id === tabId);
+          if (index !== -1) {
+            chromeWindow.tabs.splice(index, 1)
+            return;
+          }
+        })
+      }
 
       this.tabsCount = this.calcTabsCount({ groupOfTabs: this.listOfTabs });
     });
@@ -520,18 +520,34 @@ const App = {
    */
   filterTabs: function(event) {
     const { keyCode } = event;
+
     if (
       keyCode === ARROW_DOWN ||
       keyCode === ARROW_UP ||
       keyCode === ENTER_KEY ||
       keyCode === ARROW_LEFT ||
-      keyCode === ARROW_RIGHT ||
-      keyCode === 133
+      keyCode === ARROW_RIGHT
     ) {
       return;
     }
 
+    // clicking on the touchpad "middle click" fires 4 keyboard events
+    // so, I use this hack to prevent the filter which caused the list to duplicate itself 4 times
+    if (event.key === 'F22' || event.key === 'Shift' || event.key === 'Control' || event.key === 'Meta') {
+      this.eventCounter++;
+      return;
+    }
+
+    if (this.eventCounter === 3) {
+      this.eventCounter = 0;
+    }
+
     const valueToFilterBy = event.target.value.toLowerCase();
+    if (valueToFilterBy.length === 0) {
+      this.clearFilter();    
+      return;
+    }
+
     let filteredList;
 
     if (this.showOnlyCurrentWindow) {
@@ -540,7 +556,7 @@ const App = {
           tab.title.toLowerCase().indexOf(valueToFilterBy) > -1 ||
           tab.url.toLowerCase().indexOf(valueToFilterBy) > -1
         );
-      });      
+      });    
     } else {
       filteredList = this.listOfTabs.map(group => {
         const tabs = group.tabs.filter(tab => {
