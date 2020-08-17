@@ -622,7 +622,7 @@ const App = {
         this.setHightlitedTab({ set: true });
       }
     } else {
-      if (this.highlightedTab + 1 < this.tabsCount - 1) {
+      if (this.highlightedTab + 1 < this.tabsCount) {
         this.highlightedTab++;
         this.setHightlitedTab({ set: true });
       }
