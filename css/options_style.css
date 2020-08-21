@@ -13,9 +13,24 @@ body {
   font-size: 30px;
 }
 
+input[type="checkbox"] {
+  height: 24px;
+  width: 24px;
+  cursor: pointer;
+}
+
+fieldset {
+  border: none;
+}
+
 .option {
   margin: 10px 20px;
   display: flex;
+  cursor: pointer;
+}
+
+.option label {
+  width: 100%;
 }
 
 .option .description {
