@@ -62,3 +62,14 @@ fieldset {
 .grayed-out {
   color: #c0c0c0;
 }
+
+.fields-group label {
+    font-size: 18px;
+}
+
+.fields-group .dummy {
+  font-size: 30px;
+  color: yellow;
+  background: #000;
+}
+

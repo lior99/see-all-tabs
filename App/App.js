@@ -23,21 +23,38 @@ const App = {
    * */
 
   init: async function({ settings }) {
-    const { onlyCurrentWindow, darkModeOn } = settings;
+    const { onlyCurrentWindow, theme } = settings;
+    const { name: selectedTheme }= theme;
 
     this.showOnlyCurrentWindow = onlyCurrentWindow;
     this.eventCounter = 0;
 
-    if (darkModeOn) {
-      document.body.classList.add('dark-mode');
-    }
-
+    this.setTheme(selectedTheme);
+    
     this.registerEvents();
     this.listOfTabs = await this.getTabsList(this.showOnlyCurrentWindow);
+
+
+    console.log('%c this.listOfTabs', 'font-size: 18px; color: yellow' ,this.listOfTabs);
 
     this.displayList({ tabsList: this.listOfTabs });
     document.querySelector('.filterBox').focus();
     this.tabsCount = this.calcTabsCount({ groupOfTabs: this.listOfTabs });
+  },
+
+  setTheme(selectedTheme) {
+    switch(selectedTheme) {
+      case 'light':
+        document.body.classList.remove('dark-mode');
+        document.body.classList.remove('black');
+        break;
+      case 'black':
+        document.body.classList.add('black-theme');
+        break;
+      case 'dark':
+        document.body.classList.add('dark-theme');
+        break;
+      }
   },
 
   /**
@@ -48,7 +65,16 @@ const App = {
     return new Promise(resolve => {
       if (showOnlyCurrentWindow) {
         chrome.windows.getCurrent({ populate: true }, window => {
-          chrome.tabs.getAllInWindow(window.id, tabs => {
+          // chrome.tabs.getAllInWindow(window.id, tabs => {
+          //   resolve(tabs);
+          // })
+
+          const queryinfo = {
+            currentWindow: true,
+          };
+
+          chrome.tabs.query(queryinfo, tabs => {
+            console.log('%c results', 'font-size: 30px', tabs);
             resolve(tabs);
           })
         });  
@@ -351,7 +377,7 @@ const App = {
     const tagName = event.target.tagName.toLowerCase();
     const type = event.target.dataset.type;
 
-    if (type === 'speakerer') {
+    if (type === 'speaker') {
       this.toggleMute(tabId);
       return;
     }
@@ -689,6 +715,6 @@ const App = {
     tabListDomElement.textContent = '';
     this.displayList({ tabsList: filteredListOfTabs });
   }
-};
+}
 
 export default App;
