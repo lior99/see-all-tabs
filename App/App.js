@@ -35,8 +35,6 @@ const App = {
     this.listOfTabs = await this.getTabsList(this.showOnlyCurrentWindow);
 
 
-    console.log('%c this.listOfTabs', 'font-size: 18px; color: yellow' ,this.listOfTabs);
-
     this.displayList({ tabsList: this.listOfTabs });
     document.querySelector('.filterBox').focus();
     this.tabsCount = this.calcTabsCount({ groupOfTabs: this.listOfTabs });
@@ -74,7 +72,6 @@ const App = {
           };
 
           chrome.tabs.query(queryinfo, tabs => {
-            console.log('%c results', 'font-size: 30px', tabs);
             resolve(tabs);
           })
         });  
