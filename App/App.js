@@ -23,8 +23,12 @@ const App = {
    * */
 
   init: async function({ settings }) {
-    const { onlyCurrentWindow, theme } = settings;
+    const { onlyCurrentWindow, theme = { name: 'dark'} } = settings;
     const { name: selectedTheme }= theme;
+
+
+    console.log('%c settings', 'font-size: 30px; color: lime', settings);
+
 
     this.showOnlyCurrentWindow = onlyCurrentWindow;
     this.eventCounter = 0;
