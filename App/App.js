@@ -24,7 +24,8 @@ const App = (function() {
    * */
 
   async function init({ settings }) {
-    const { onlyCurrentWindow, darkModeOn } = settings;
+    const { onlyCurrentWindow, theme = {} } = settings;
+    const { name = 'dark' } = theme;
 
     showOnlyCurrentWindow = onlyCurrentWindow;
 
