@@ -21,13 +21,31 @@
           </span>
         </label>
       </div>
-      <div class="option">
-        <input type="checkbox" value="false" id="darkTheme" />
-        <label for="darkTheme" class="description">
-          Dark mode
-        </label>
+      <div>
+        <fieldset class="fields-group">
+          <label>Theme</label>
+          <div class="option">
+            <input type="radio" value="light" name="theme" />
+            <label for="theme" class="description">
+              Light mode
+            </label>
+          </div>
+          <div class="option">
+            <input type="radio" value="dark" name="theme" />
+            <label for="theme" class="description">
+              Dark mode (*recommended)
+            </label>
+          </div>
+        <div class="option">
+            <input type="radio" value="black" name="theme" />
+            <label for="theme" class="description">
+              Pitch black
+            </label>
+        </div>
+        </fieldset>
       </div>
     </fieldset>
+
     <div class="buttons-container">
       <button id="closeButton">Close</button>
     </div>

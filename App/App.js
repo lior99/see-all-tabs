@@ -28,16 +28,29 @@ const App = (function() {
 
     showOnlyCurrentWindow = onlyCurrentWindow;
 
-    if (darkModeOn) {
-      document.body.classList.add('dark-mode');
-    }
-
     registerEvents();
     listOfTabs = await getTabsList(showOnlyCurrentWindow);
+
+    setTheme(name);
 
     displayList({ tabsList: listOfTabs });
     document.querySelector('.filterBox').focus();
     tabsCount = calcTabsCount({ groupOfTabs: listOfTabs });
+  }
+
+  function setTheme(selectedTheme) {
+    switch(selectedTheme) {
+      case 'light':
+        document.body.classList.remove('dark-mode');
+        document.body.classList.remove('black');
+        break;
+      case 'black':
+        document.body.classList.add('black-theme');
+        break;
+      case 'dark':
+        document.body.classList.add('dark-theme');
+        break;
+      }
   }
 
   /**
@@ -48,7 +61,15 @@ const App = (function() {
     return new Promise(resolve => {
       if (showOnlyCurrentWindow) {
         chrome.windows.getCurrent({ populate: true }, window => {
-          chrome.tabs.getAllInWindow(window.id, tabs => {
+          // chrome.tabs.getAllInWindow(window.id, tabs => {
+          //   resolve(tabs);
+          // })
+
+          const queryinfo = {
+            currentWindow: true,
+          };
+
+          chrome.tabs.query(queryinfo, tabs => {
             resolve(tabs);
           })
         });  
@@ -68,7 +89,7 @@ const App = (function() {
   function registerEvents() {
     const tabList = document.querySelector('.tab-list');
     const filterBox = document.querySelector('.filterBox');
-   
+
     tabList.addEventListener('click', onTabListClick);
     tabList.addEventListener('mousedown', onMouseDown);
     filterBox.addEventListener('keyup', filterTabs);
@@ -384,7 +405,7 @@ const App = (function() {
    */
   function setActiveTab({ tabId, windowId }) {
     chrome.windows.update(windowId, { focused: true }, function() {
-      selectedWindowId = windowId;
+      // selectedWindowId = windowId;
     });
 
     chrome.tabs.update(tabId, { active: true });
@@ -541,7 +562,7 @@ const App = (function() {
 
     const valueToFilterBy = event.target.value.toLowerCase();
     if (valueToFilterBy.length === 0) {
-      clearFilter();    
+      clearFilter();
       return;
     }
 

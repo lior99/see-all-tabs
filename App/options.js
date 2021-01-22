@@ -19,9 +19,16 @@ const optionsHandler = {
   },
 
   handleClick(event) {
-    if (event.target.type && event.target.type === 'checkbox') {
-      this.onCheckboxToggle();
-    } else if (event.target.id === 'closeButton') {
+    const { type: eventType, id }  = event.target;
+
+    switch(eventType) {
+      case 'checkbox':
+      case 'radio':
+        this.handleUserOptionChange();
+        break;
+    }
+
+    if (event.target.id === 'closeButton') {
       this.onCloseClick();
     }
   },
@@ -30,23 +37,36 @@ const optionsHandler = {
     this.unRegisterEvents();
     window.close();
   },
-  
-  onCheckboxToggle() {
+
+  handleUserOptionChange() {
+    const selectedTheme = this.getSelectedTheme();
     const onlyCurrentWindowInput = document.querySelector('#onlyCurrentWindow');
-    const darkThemeInput = document.querySelector('#darkTheme');
 
     const data = {
       onlyCurrentWindow: onlyCurrentWindowInput.checked,
-      darkModeOn: darkThemeInput.checked
+      theme: {
+        name: selectedTheme
+      }
     }
 
+    this.setDataOnStorage(data);
+  },
+  
+  getSelectedTheme() {
+    const radioElements = document.querySelectorAll('input[name="theme"]');
+    return [...radioElements].find(element => element.checked).value;
+  },
+
+  setDataOnStorage(data) {
     chrome.storage.sync.set(data);
   },
 
   loadSettingsFromStorage() {
     chrome.storage.sync.get({
       onlyCurrentWindow: false,
-      darkModeOn: false
+      theme: { 
+        name: 'dark',
+      }
     }, (values) => {
       this.setValuesOnPage(values);
     })
@@ -54,7 +74,13 @@ const optionsHandler = {
 
   setValuesOnPage(values) {
     document.querySelector('#onlyCurrentWindow').checked = values.onlyCurrentWindow;
-    document.querySelector('#darkTheme').checked = values.darkModeOn;
+
+    const themeElements = document.querySelectorAll('input[name="theme"');
+    [...themeElements].forEach(element => {
+      if (element.value === values.theme.name) {
+        element.checked = true;
+      }
+    })
   }
 }
 
