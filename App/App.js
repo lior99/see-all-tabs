@@ -24,8 +24,7 @@ const App = (function() {
    * */
 
   async function init({ settings }) {
-    const { onlyCurrentWindow, darkModeOn, theme }= settings;
-    const { name = 'dark' } = theme;
+    const { onlyCurrentWindow, darkModeOn } = settings;
 
     showOnlyCurrentWindow = onlyCurrentWindow;
 
@@ -406,7 +405,7 @@ const App = (function() {
    */
   function setActiveTab({ tabId, windowId }) {
     chrome.windows.update(windowId, { focused: true }, function() {
-      selectedWindowId = windowId;
+      // selectedWindowId = windowId;
     });
 
     chrome.tabs.update(tabId, { active: true });
