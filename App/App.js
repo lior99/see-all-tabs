@@ -8,43 +8,38 @@ import {
   ARROW_RIGHT,
 } from './consts.js';
 
-const App = {
-  currentWindowId: null,
-  windowCounter: 0,
-  listOfTabs: [],
-  highlightedTab: -1,
-  isInFilterMode: false,
-  filteredResultsLength: 0,
-  tabsCount: 0,
-  showOnlyCurrentWindow: false,
+const App = (function() {
+  let currentWindowId = null;
+  let windowCounter = 0;
+  let listOfTabs = [];
+  let highlightedTab = -1;
+  let isInFilterMode = false;
+  let filteredResultsLength = 0;
+  let tabsCount = 0;
+  let showOnlyCurrentWindow = false;
+  let eventCounter = 0;
 
   /**
    * main entry point
    * */
 
-  init: async function({ settings }) {
-    const { onlyCurrentWindow, theme = { name: 'dark'} } = settings;
-    const { name: selectedTheme }= theme;
+  async function init({ settings }) {
+    const { onlyCurrentWindow, darkModeOn, theme }= settings;
+    const { name = 'dark' } = theme;
 
+    showOnlyCurrentWindow = onlyCurrentWindow;
 
-    console.log('%c settings', 'font-size: 30px; color: lime', settings);
+    registerEvents();
+    listOfTabs = await getTabsList(showOnlyCurrentWindow);
 
+    setTheme(name);
 
-    this.showOnlyCurrentWindow = onlyCurrentWindow;
-    this.eventCounter = 0;
-
-    this.setTheme(selectedTheme);
-    
-    this.registerEvents();
-    this.listOfTabs = await this.getTabsList(this.showOnlyCurrentWindow);
-
-
-    this.displayList({ tabsList: this.listOfTabs });
+    displayList({ tabsList: listOfTabs });
     document.querySelector('.filterBox').focus();
-    this.tabsCount = this.calcTabsCount({ groupOfTabs: this.listOfTabs });
-  },
+    tabsCount = calcTabsCount({ groupOfTabs: listOfTabs });
+  }
 
-  setTheme(selectedTheme) {
+  function setTheme(selectedTheme) {
     switch(selectedTheme) {
       case 'light':
         document.body.classList.remove('dark-mode');
@@ -57,13 +52,13 @@ const App = {
         document.body.classList.add('dark-theme');
         break;
       }
-  },
+  }
 
   /**
    * Get list of all open tabs using chrome's own getAll method
    * */
 
-  getTabsList: function(showOnlyCurrentWindow = false) {
+  function getTabsList(showOnlyCurrentWindow = false) {
     return new Promise(resolve => {
       if (showOnlyCurrentWindow) {
         chrome.windows.getCurrent({ populate: true }, window => {
@@ -85,47 +80,49 @@ const App = {
         });
       }
     });
-  },
+  }
 
   /**
    * register to user events such as click, mousedown and handlign filter box and filter
    * box clearance
    *  */
 
-  registerEvents: function() {
+  function registerEvents() {
     const tabList = document.querySelector('.tab-list');
     const filterBox = document.querySelector('.filterBox');
-    tabList.addEventListener('click', this.onTabListClick.bind(this));
-    tabList.addEventListener('mousedown', this.onMouseDown.bind(this));
-    filterBox.addEventListener('keyup', this.filterTabs.bind(this));
+
+    tabList.addEventListener('click', onTabListClick);
+    tabList.addEventListener('mousedown', onMouseDown);
+    filterBox.addEventListener('keyup', filterTabs);
+
     document
       .querySelector('.remove-filter')
-      .addEventListener('click', this.clearFilter.bind(this));
+      .addEventListener('click', clearFilter);
     document
       .querySelector('body')
-      .addEventListener('keyup', this.onKeyboardButtonPress.bind(this));
+      .addEventListener('keyup', onKeyboardButtonPress);
     document
       .querySelector('body')
-      .addEventListener('mousemove', this.onMouseMove.bind(this));
-  },
+      .addEventListener('mousemove', onMouseMove);
+  }
 
   /**
    * onmouse move handle for the body
    */
-  onMouseMove: function() {
-    this.setHightlitedTab({ set: false });
-  },
+  function onMouseMove() {
+    setHightlitedTab({ set: false });
+  }
 
   /**
    * render the tab list object
    * @param {array} tabList - array of open tabs
    */
-  displayList: async function({ tabsList }) {
+  async function displayList({ tabsList }) {
     const tabListDomElement = document.querySelector('.tab-list');
-    const currentWindowId = await this.getCurrentWindow();
+    const currentWindowId = await getCurrentWindow();
 
-    if (this.showOnlyCurrentWindow) {
-      const domFragment = this.displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId })
+    if (showOnlyCurrentWindow) {
+      const domFragment = displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId })
       tabListDomElement.appendChild(domFragment);
     } else {
       tabsList.sort((a, b) => {
@@ -136,11 +133,11 @@ const App = {
         const tabRowFragment = document.createDocumentFragment();
   
         chromeWindow.tabs.forEach(tab => {
-          tabRowFragment.appendChild(this.buildTabRow({ tab, currentWindowId, onlyTabInWindow: chromeWindow.tabs.length === 1 }));
+          tabRowFragment.appendChild(buildTabRow({ tab, currentWindowId, onlyTabInWindow: chromeWindow.tabs.length === 1 }));
         });
   
         if (tabsList.length > 1 && chromeWindow.tabs.length > 0) {
-            const group = this.buildWindowsGroup({
+            const group = buildWindowsGroup({
               chromeWindow,
               tabRowFragment,
               windowIndex: index + 1,
@@ -155,33 +152,33 @@ const App = {
         }
       });
     }
-  },
+  }
 
   /**
    * list of tabs without a group - only tabs in current window
    * @param {array} tabs - all tabs in the window that invoked the extension
    * @param {number} currentWindowId - current window id
    */
-  displayListOfTabsInCurrentWindowOnly: function({ tabs, currentWindowId }) {
+  function displayListOfTabsInCurrentWindowOnly({ tabs, currentWindowId }) {
     const tabRowFragment = document.createDocumentFragment();
 
     tabs.forEach(tab => {
-      tabRowFragment.appendChild(this.buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1 }));
+      tabRowFragment.appendChild(buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1 }));
     });
 
     return tabRowFragment;
-  },
+  }
 
   /**
    * Gets the current active window
    */
-  getCurrentWindow: function() {
+  function getCurrentWindow() {
     return new Promise(resolve => {
       chrome.windows.getCurrent({}, currentWindow => {
         resolve(currentWindow.id);
       });
     });
-  },
+  }
 
   /**
    * Organize sets of tabs into a group by windows.
@@ -193,7 +190,7 @@ const App = {
    * @param {number} windowId - id of chrome window
    * @param {boolean} isCurrentWindow - flag is the chrome window the active one
    */
-  buildWindowsGroup: function({ chromeWindow, tabRowFragment, windowIndex, windowId, isCurrentWindow }) {
+  function buildWindowsGroup({ chromeWindow, tabRowFragment, windowIndex, windowId, isCurrentWindow }) {
     const group = document.createElement('div');
     group.className = `group ${chromeWindow.incognito ? 'incognito' : ''}`;
 
@@ -227,7 +224,7 @@ const App = {
     group.appendChild(tabRowFragment);
 
     return group;
-  },
+  }
 
   /**
    * create a tab row as div in the UI
@@ -235,7 +232,7 @@ const App = {
    * @param {number} currentWindowId - id of current window
    * @param {boolean} onlyTabInWindow - is there only one tab in the window, if yes than don't style it as active
    */
-  buildTabRow: function({ tab, currentWindowId, onlyTabInWindow }) {
+  function buildTabRow({ tab, currentWindowId, onlyTabInWindow }) {
     const active = tab.active && tab.windowId === currentWindowId && !onlyTabInWindow ? 'active' : '';
 
     const tabRow = document.createElement('div');
@@ -243,42 +240,42 @@ const App = {
     tabRow.dataset.tabId = tab.id;
     tabRow.dataset.windowId = tab.windowId;
 
-    const activePlaceHolder = this.createActivePlaceHolder(active);
+    const activePlaceHolder = createActivePlaceHolder(active);
     tabRow.appendChild(activePlaceHolder);
 
-    const favIcon = this.createFavIcon({ tab });
+    const favIcon = createFavIcon({ tab });
     tabRow.appendChild(favIcon);
 
-    const tabTitle = this.createTabTitle({ tab });
+    const tabTitle = createTabTitle({ tab });
     tabRow.appendChild(tabTitle);
 
-    const closeButtonDiv = this.createCloseButtonDiv();
+    const closeButtonDiv = createCloseButtonDiv();
     tabRow.appendChild(closeButtonDiv);
 
     return tabRow;
-  },
+  }
 
 
   /**
    * Create a box to display active indicator
    */
-  createActivePlaceHolder: function() {
+  function createActivePlaceHolder() {
     const placeHolder = document.createElement('div');
     placeHolder.className = 'place-holder';
     
     return placeHolder;
-  },
+  }
 
 
   /**
    * create a div containing the title of tab
    * @param {object} tab - chrome's tab object
    */
-  createTabTitle: function({ tab }) {
+  function createTabTitle({ tab }) {
     const tabTitle = document.createElement('div');
     tabTitle.className = 'tab-title';
 
-    const speakerSpan = this.createSpeakerIcon({ tab });
+    const speakerSpan = createSpeakerIcon({ tab });
     tabTitle.appendChild(speakerSpan);
 
     const tabDesc = document.createElement('span');
@@ -287,13 +284,13 @@ const App = {
 
     tabTitle.appendChild(tabDesc);
     return tabTitle;
-  },
+  }
 
   /**
    * create a div with fav icon
    * @param {object} tab - chrome's tab object
    */
-  createFavIcon: function({ tab }) {
+  function createFavIcon({ tab }) {
     const favIcon = document.createElement('div');
     favIcon.className = 'favicon';
 
@@ -302,24 +299,24 @@ const App = {
 
     favIcon.appendChild(favIconImage);
     return favIcon;
-  },
+  }
 
   /**
    * create a div with close button
    */
-  createCloseButtonDiv: function() {
+  function createCloseButtonDiv() {
     const closeButtonDiv = document.createElement('div');
     closeButtonDiv.className = 'close-button';
     closeButtonDiv.dataset.type = 'closeButton';
    
     return closeButtonDiv;
-  },
+  }
 
   /**
    * create div with speacker or mute icon
    * @param {object} tab object and speaker visibility
    */
-  createSpeakerIcon: function(params) {
+  function createSpeakerIcon(params) {
     const { tab } = params;
     const speakerSpan = document.createElement('span');
     
@@ -327,12 +324,12 @@ const App = {
     speakerSpan.dataset.type = SPEAKER.type;
 
     return speakerSpan;
-  },
+  }
 
   /**
    * Removes filter on box and calling the display list to render the list again
    */
-  clearFilter: function() {
+  function clearFilter() {
     document.querySelector('.filterBox').value = '';
     const tabListElement = document.querySelector('.tab-list');
 
@@ -340,104 +337,99 @@ const App = {
       tabListElement.removeChild(tabListElement.firstChild);
     }
 
-    this.displayList({ tabsList: this.listOfTabs });
-    this.isInFilterMode = false;
-  },
+    displayList({ tabsList: listOfTabs });
+    isInFilterMode = false;
+  }
 
   /**
    * handle middle click button, closes the tab
    * @param {event} event - mouse down event
    */
-  onMouseDown: function(event) {
+  function onMouseDown(event) {
     event.stopImmediatePropagation();
 
     const isMiddleButtonDown = event.button === 1;
 
     if (isMiddleButtonDown) {
-      const { tabId } = this.getTabData(event);
+      const { tabId } = getTabData(event);
       if (!tabId) {
         return;
       }
 
-      this.removeTabFromList(tabId);
-      this.closeTab(tabId);
+      removeTabFromList(tabId);
+      closeTab(tabId);
     }
-  },
+  }
 
   /**
    * handle clicking on a tab row
    * @param {event} event - onClick event
    */
-  onTabListClick: function(event) {
-    // if (event.currentTarget.id === 'tabList') {
-    //   alert('inside')
-    //   return;
-    // }
-
-    const { tabId, windowId } = this.getTabData(event);
+  function onTabListClick(event) {
+    const { tabId, windowId } = getTabData(event);
     const tagName = event.target.tagName.toLowerCase();
     const type = event.target.dataset.type;
 
     if (type === 'speaker') {
-      this.toggleMute(tabId);
+      toggleMute(tabId);
       return;
     }
 
     // if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
     if (type === 'closeButton') {
-      this.removeTabFromList(tabId);
-      this.closeTab(tabId);
+      removeTabFromList(tabId);
+      closeTab(tabId);
     } else {
       if (!tabId) {
         return;
       }
-      this.setActiveTab({ tabId, windowId });
+      setActiveTab({ tabId, windowId });
     }
-  },
+  }
 
   /**
    * handle clicking on the sound icon, toggling mute and unmute
    * @param {number} tabId from chrome's tab data object. used to get the clicked tab
    */
-  toggleMute: function(tabId) {
+  function toggleMute(tabId) {
     chrome.tabs.get(tabId, tabData => {
       const muted = !tabData.mutedInfo.muted;
       chrome.tabs.update(tabId, { muted: muted });
-      this.toggleMuteIcon(tabId, muted);
+      toggleMuteIcon(tabId, muted);
     });
-  },
+  }
 
   /**
    * handle click on a tab name in the list
    * @param {number} tabId - from chrome's tab data object. used to get the clicked tab
    * @param {number} windowId - index of the window
    */
-  setActiveTab: function({ tabId, windowId }) {
+  function setActiveTab({ tabId, windowId }) {
     chrome.windows.update(windowId, { focused: true }, function() {
-      this.selectedWindowId = windowId;
+      selectedWindowId = windowId;
     });
 
     chrome.tabs.update(tabId, { active: true });
-  },
+  }
 
-  unregisterEvents: function() {
+  function unregisterEvents() {
     document
       .querySelector('.tab-list')
-      .removeEventListener('click', this.onTabListClick);
+      .removeEventListener('click', onTabListClick);
     document
       .querySelector('.filterBox')
-      .removeEventListener('keyup', this.filterTabs);
+      .removeEventListener('keyup', filterTabs);
     document
       .querySelector('.remove-filter')
-      .removeEventListener('click', this.clearFilter);
-    window.removeEventListener('mousemove', this.onMouseMove);
-  },
+      .removeEventListener('click', clearFilter);
+    window.removeEventListener('mousemove', onMouseMove);
+  }
 
   /**
    * handle on click on a tab to return it's id and window id (index of id)
    * @param {event} event - on click event
    */
-  getTabData: function(event) {
+  function getTabData(event) {
     let currentElement = event.target;
     let elementType = currentElement.tagName.toLowerCase();
 
@@ -457,25 +449,25 @@ const App = {
       tabId: parseInt(currentElement.dataset.tabId),
       windowId: parseInt(currentElement.dataset.windowId)
     };
-  },
+  }
 
   /**
    * handle closing the tab
    * @param {number} tabId - the tab the user clicked on closing
    */
-  closeTab: function(tabId) {
+  function closeTab(tabId) {
     chrome.tabs.remove(tabId, () => {
-      if (!Array.isArray(this.listOfTabs)) {
-        this.listOfTabs = [this.listOfTabs];
+      if (!Array.isArray(listOfTabs)) {
+        listOfTabs = [listOfTabs];
       }
   
-      if (this.showOnlyCurrentWindow) {
-          const index = this.listOfTabs.findIndex(tab => tab.id === tabId);
+      if (showOnlyCurrentWindow) {
+          const index = listOfTabs.findIndex(tab => tab.id === tabId);
           if (index !== -1) {
-            this.listOfTabs.splice(index, 1)
+            listOfTabs.splice(index, 1)
           }
       } else {
-        this.listOfTabs.some(chromeWindow => {
+        listOfTabs.some(chromeWindow => {
           const index = chromeWindow.tabs.findIndex(tab => tab.id === tabId);
           if (index !== -1) {
             chromeWindow.tabs.splice(index, 1)
@@ -484,16 +476,16 @@ const App = {
         })
       }
 
-      this.tabsCount = this.calcTabsCount({ groupOfTabs: this.listOfTabs });
+      tabsCount = calcTabsCount({ groupOfTabs: listOfTabs });
     });
 
-  },
+  }
 
   /**
    * handler for clicking the close button, remove the div from the container
    * @param {number} tabId - tab number
    */
-  removeTabFromList: function(tabId) {
+  function removeTabFromList(tabId) {
     const list = [...document.querySelectorAll('.tab-row')];
     const tab = list.find(
       tab => parseInt(tab.dataset.tabId) === parseInt(tabId)
@@ -517,14 +509,14 @@ const App = {
         }
       }
     }
-  },
+  }
 
   /**
    * Event handler for clicking on the speaker icon
    * @param {number} tabId - chrome object tab id
    * @param {boolean} muted - is the tab muted or not
    */
-  toggleMuteIcon: function(tabId, muted) {
+  function toggleMuteIcon(tabId, muted) {
     const list = [...document.querySelectorAll('.tab-row')];
     const tab = list.find(
       tab => parseInt(tab.dataset.tabId) === parseInt(tabId)
@@ -539,13 +531,13 @@ const App = {
       speakerSpan.classList.remove('volume-mute');
       speakerSpan.classList.add('volume-up');
     }
-  },
+  }
 
   /**
    * Filter the tab list when writing in the filter box
    * @param {event} event - keyboard event
    */
-  filterTabs: function(event) {
+  function filterTabs(event) {
     const { keyCode } = event;
 
     if (
@@ -561,31 +553,31 @@ const App = {
     // clicking on the touchpad "middle click" fires 4 keyboard events
     // so, I use this hack to prevent the filter which caused the list to duplicate itself 4 times
     if (event.key === 'F22' || event.key === 'Shift' || event.key === 'Control' || event.key === 'Meta') {
-      this.eventCounter++;
+      eventCounter++;
       return;
     }
 
-    if (this.eventCounter === 3) {
-      this.eventCounter = 0;
+    if (eventCounter === 3) {
+      eventCounter = 0;
     }
 
     const valueToFilterBy = event.target.value.toLowerCase();
     if (valueToFilterBy.length === 0) {
-      this.clearFilter();    
+      clearFilter();
       return;
     }
 
     let filteredList;
 
-    if (this.showOnlyCurrentWindow) {
-      filteredList = this.listOfTabs.filter(tab => {
+    if (showOnlyCurrentWindow) {
+      filteredList = listOfTabs.filter(tab => {
         return (
           tab.title.toLowerCase().indexOf(valueToFilterBy) > -1 ||
           tab.url.toLowerCase().indexOf(valueToFilterBy) > -1
         );
       });    
     } else {
-      filteredList = this.listOfTabs.map(group => {
+      filteredList = listOfTabs.map(group => {
         const tabs = group.tabs.filter(tab => {
           return (
             tab.title.toLowerCase().indexOf(valueToFilterBy) > -1 ||
@@ -599,15 +591,15 @@ const App = {
       });
     }
 
-    this.displayFilteredList(filteredList);
-    this.highlightedTab = -1;
-    this.isInFilterMode = true;
-    this.filteredResultsLength = this.calcTabsCount({
+    displayFilteredList(filteredList);
+    highlightedTab = -1;
+    isInFilterMode = true;
+    filteredResultsLength = calcTabsCount({
       groupOfTabs: filteredList
     });
-  },
+  }
 
-  onKeyboardButtonPress: function(event) {
+  function onKeyboardButtonPress(event) {
     const { keyCode } = event;
 
     // check if up/down arrows and enter
@@ -619,58 +611,57 @@ const App = {
       switch (keyCode) {
         case ENTER_KEY: {
           const { tabId, windowId } = document.querySelectorAll('.tab-row')[
-            this.highlightedTab
+            highlightedTab
           ].dataset;
           const params = {
             tabId: parseInt(tabId),
             windowId: parseInt(windowId)
           };
 
-          this.setActiveTab(params);
+          setActiveTab(params);
           break;
         }
 
         case ARROW_UP: {
-          this.highlightPreviousTab();
+          highlightPreviousTab();
           break;
         }
         case ARROW_DOWN: {
-          this.highlightNextTab();
+          highlightNextTab();
           break;
         }
       }
     }
-  },
+  }
 
-  highlightNextTab: function() {
-    if (this.isInFilterMode) {
-      if (this.highlightedTab + 1 <= this.filteredResultsLength - 1) {
-        this.highlightedTab++;
-        this.setHightlitedTab({ set: true });
+  function highlightNextTab() {
+    if (isInFilterMode) {
+      if (highlightedTab + 1 <= filteredResultsLength - 1) {
+        highlightedTab++;
+        setHightlitedTab({ set: true });
       }
     } else {
-      if (this.highlightedTab + 1 < this.tabsCount) {
-        this.highlightedTab++;
-        this.setHightlitedTab({ set: true });
+      if (highlightedTab + 1 < tabsCount) {
+        highlightedTab++;
+        setHightlitedTab({ set: true });
       }
     }
-  },
+  }
 
-  highlightPreviousTab: function() {
-    if (this.highlightedTab > 0) {
-      this.highlightedTab--;
-      this.setHightlitedTab({ set: true });
+  function highlightPreviousTab() {
+    if (highlightedTab > 0) {
+      highlightedTab--;
+      setHightlitedTab({ set: true });
     }
-  },
+  }
 
   /**
    * calculate how many open tabs are there including all open windows
    */
-  calcTabsCount: function({ groupOfTabs }) {
-    if (this.showOnlyCurrentWindow) {
+  function calcTabsCount({ groupOfTabs }) {
+    if (showOnlyCurrentWindow) {
       return groupOfTabs.length;
     }
-
 
     if(!Array.isArray(groupOfTabs)) {
       groupOfTabs = [groupOfTabs]
@@ -686,36 +677,40 @@ const App = {
     }, total);
 
     return totalTabsNumber;
-  },
+  }
 
   /**
    * Set background color to a tab
    * @param {boolean} set - indicates whether to highlight a tab or not
    */
-  setHightlitedTab: function({ set }) {
+  function setHightlitedTab({ set }) {
     const tabRowsList = document.querySelectorAll('.tab-row');
 
     tabRowsList.forEach(element => element.classList.remove('hightlighted'));
 
     if (set) {
-      tabRowsList[this.highlightedTab].classList.add('hightlighted');
-      tabRowsList[this.highlightedTab].scrollIntoView({
+      tabRowsList[highlightedTab].classList.add('hightlighted');
+      tabRowsList[highlightedTab].scrollIntoView({
         behavior: 'smooth',
         block: 'nearest'
       });
     }
-  },
+  }
 
   /**
    * Display the results of the filter as a list
    * @param {array} filteredListOfTabs - list of filter tabs
    */
 
-  displayFilteredList: function(filteredListOfTabs) {
+  function displayFilteredList(filteredListOfTabs) {
     const tabListDomElement = document.querySelector('.tab-list');
     tabListDomElement.textContent = '';
-    this.displayList({ tabsList: filteredListOfTabs });
+    displayList({ tabsList: filteredListOfTabs });
   }
-}
+
+  return {
+    init
+  }
+})();
 
 export default App;
