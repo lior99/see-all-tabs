@@ -39,6 +39,7 @@ fieldset {
   margin-left: 10px;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
 }
 
 .description .note {

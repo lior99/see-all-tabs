@@ -43,13 +43,19 @@ const App = (function() {
     switch(selectedTheme) {
       case 'light':
         document.body.classList.remove('dark-mode');
-        document.body.classList.remove('black');
+        document.body.classList.remove('black-theme');
+        document.body.classList.add('light-theme');
+
         break;
       case 'black':
         document.body.classList.add('black-theme');
+        document.body.classList.remove('dark-mode');
+        document.body.classList.remove('light-theme');
         break;
       case 'dark':
         document.body.classList.add('dark-theme');
+        document.body.classList.remove('black-theme');
+        document.body.classList.remove('light-theme');
         break;
       }
   }
