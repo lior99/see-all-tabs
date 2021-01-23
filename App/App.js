@@ -31,7 +31,10 @@ const App = (function() {
     showOnlyCurrentWindow = onlyCurrentWindow;
 
     const tabGroup = await getTabsGroups();
-    setGroupsIcons(tabGroup);
+
+    if (tabGroup) {
+      setGroupsIcons(tabGroup);
+    }
 
     registerEvents();
     listOfTabs = await getTabsList(showOnlyCurrentWindow);
