@@ -26,3 +26,14 @@ export const CLOSE_BUTTON = {
 	src: './images/svg/times-circle.svg',
 	type: 'closeButton'
 }
+
+export const groupColors = {
+	grey: '#5f6368',
+	blue: '#3374eb',
+	red: '#d02d1d',
+	yellow: '#db7300',
+	green: '#348e3a',
+	pink: '#c71485',
+	purple: '#8f36ea',
+	cyan: '#267b84'
+}

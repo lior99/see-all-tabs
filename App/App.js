@@ -6,6 +6,7 @@ import {
   ENTER_KEY,
   ARROW_LEFT,
   ARROW_RIGHT,
+  groupColors
 } from './consts.js';
 
 const App = (function() {
@@ -16,7 +17,7 @@ const App = (function() {
   let isInFilterMode = false;
   let filteredResultsLength = 0;
   let tabsCount = 0;
-  let showOnlyCurrentWindow = false;
+  let showOnlyCurrentWindow; // = true;
   let eventCounter = 0;
 
   /**
@@ -24,19 +25,36 @@ const App = (function() {
    * */
 
   async function init({ settings }) {
-    const { onlyCurrentWindow, theme = {} } = settings;
+    const { onlyCurrentWindow = true, theme = {} } = settings;
     const { name = 'dark' } = theme;
 
     showOnlyCurrentWindow = onlyCurrentWindow;
+
+    const tabGroup = await getTabsGroups();
+    setGroupsIcons(tabGroup);
 
     registerEvents();
     listOfTabs = await getTabsList(showOnlyCurrentWindow);
 
     setTheme(name);
 
-    displayList({ tabsList: listOfTabs });
+    displayList({ tabsList: listOfTabs, tabGroup });
     document.querySelector('.filterBox').focus();
     tabsCount = calcTabsCount({ groupOfTabs: listOfTabs });
+  }
+
+  function setGroupsIcons(groups) {
+    groups.forEach(group => {
+      const div = document.createElement('div');
+      div.className = 'tab-group';
+      div.style.background = groupColors[group.color];
+      div.textContent = group.title;
+      div.dataset.collapsed = group.collapsed; 
+      div.dataset.id = group.id;
+      div.dataset.type = 'group';
+
+      document.querySelector('#groups').appendChild(div);
+    });
   }
 
   function setTheme(selectedTheme) {
@@ -60,10 +78,21 @@ const App = (function() {
       }
   }
 
+  function getTabsGroups() {
+    if (chrome.tabGroups) {
+      return new Promise(resolve => {
+        chrome.tabGroups.query({}, function(tabGroup){
+          resolve(tabGroup);
+        });
+      });
+    } else {
+      return Promise.resolve(null);
+    }
+  }
+
   /**
    * Get list of all open tabs using chrome's own getAll method
    * */
-
   function getTabsList(showOnlyCurrentWindow = false) {
     return new Promise(resolve => {
       if (showOnlyCurrentWindow) {
@@ -96,10 +125,13 @@ const App = (function() {
   function registerEvents() {
     const tabList = document.querySelector('.tab-list');
     const filterBox = document.querySelector('.filterBox');
+    const groups = document.querySelector('#groups');
 
     tabList.addEventListener('click', onTabListClick);
     tabList.addEventListener('mousedown', onMouseDown);
     filterBox.addEventListener('keyup', filterTabs);
+
+    groups.addEventListener('click', onTabGroupClick);
 
     document
       .querySelector('.remove-filter')
@@ -110,6 +142,22 @@ const App = (function() {
     document
       .querySelector('body')
       .addEventListener('mousemove', onMouseMove);
+  }
+
+  function onTabGroupClick(event) {
+    const { target } = event;
+    if (target.dataset.type === 'group') {
+      let { id: groupId, collapsed: groupCollapsed } = target.dataset;
+
+      groupId = parseInt(groupId);
+      groupCollapsed = groupCollapsed === 'true' ? true : false;
+
+      chrome.tabGroups.update(groupId, {
+        collapsed: !groupCollapsed
+      }, function(tabGroup){
+        console.log('tabGroup', tabGroup)
+      })
+    }
   }
 
   /**
@@ -123,12 +171,12 @@ const App = (function() {
    * render the tab list object
    * @param {array} tabList - array of open tabs
    */
-  async function displayList({ tabsList }) {
+  async function displayList({ tabsList, tabGroup }) {
     const tabListDomElement = document.querySelector('.tab-list');
     const currentWindowId = await getCurrentWindow();
 
     if (showOnlyCurrentWindow) {
-      const domFragment = displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId })
+      const domFragment = displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId, tabGroup })
       tabListDomElement.appendChild(domFragment);
     } else {
       tabsList.sort((a, b) => {
@@ -165,14 +213,38 @@ const App = (function() {
    * @param {array} tabs - all tabs in the window that invoked the extension
    * @param {number} currentWindowId - current window id
    */
-  function displayListOfTabsInCurrentWindowOnly({ tabs, currentWindowId }) {
+  function displayListOfTabsInCurrentWindowOnly({ tabs, currentWindowId, tabGroup }) {
     const tabRowFragment = document.createDocumentFragment();
 
     tabs.forEach(tab => {
-      tabRowFragment.appendChild(buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1 }));
+      const params = getGroupData({ tabGroup, groupId: tab.groupId });
+
+      let groupParams = null;
+
+      if (params) {
+        const { collapsed, color, title } = params;
+        groupParams = { collapsed, color, title };
+      }
+
+      tabRowFragment.appendChild(buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams }));
     });
 
     return tabRowFragment;
+  }
+
+  function getGroupData({ tabGroup, groupId }) {
+    const tabGroupItem = tabGroup.filter(group => group.id === groupId);
+
+    if (tabGroupItem.length > 0) {
+      const { collapsed, color, title } = tabGroupItem[0];
+      return {
+        collapsed,
+        color,
+        title 
+      }
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -238,7 +310,7 @@ const App = (function() {
    * @param {number} currentWindowId - id of current window
    * @param {boolean} onlyTabInWindow - is there only one tab in the window, if yes than don't style it as active
    */
-  function buildTabRow({ tab, currentWindowId, onlyTabInWindow }) {
+  function buildTabRow({ tab, currentWindowId, onlyTabInWindow, groupParams }) {
     const active = tab.active && tab.windowId === currentWindowId && !onlyTabInWindow ? 'active' : '';
 
     const tabRow = document.createElement('div');
@@ -246,9 +318,11 @@ const App = (function() {
     tabRow.dataset.tabId = tab.id;
     tabRow.dataset.windowId = tab.windowId;
 
-    const activePlaceHolder = createActivePlaceHolder(active);
-    tabRow.appendChild(activePlaceHolder);
-
+    if (groupParams) {
+      const activePlaceHolder = createTabGroupPlaceHolder(groupParams);
+      tabRow.appendChild(activePlaceHolder);
+    }
+   
     const favIcon = createFavIcon({ tab });
     tabRow.appendChild(favIcon);
 
@@ -265,9 +339,11 @@ const App = (function() {
   /**
    * Create a box to display active indicator
    */
-  function createActivePlaceHolder() {
+  function createTabGroupPlaceHolder({ id, title, color }) {
     const placeHolder = document.createElement('div');
     placeHolder.className = 'place-holder';
+    placeHolder.style.background = groupColors[color];
+    placeHolder.dataset.group = 'dummy'; // TODO: please refactor this 
     
     return placeHolder;
   }

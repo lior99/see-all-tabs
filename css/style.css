@@ -84,9 +84,10 @@ ul.themes li.theme {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  border-top: solid 1px #7b7979;
+  border-top: solid 1px #504d4d;
   border-bottom: none;
   height: 32px;
+  padding: 5px 0;
 }
 
 .theme-classic {
@@ -151,16 +152,15 @@ ul.themes li.theme {
 }
 
 .place-holder {
-  visibility: hidden;
-  height: 100%;
+  height: 43px;
   width: 10px;
-  background: transparent;
 }
 
+/*
 .active .place-holder {
-  background: #e621f3;
-  visibility: visible;
-}
+  /* background: #e621f3; */
+  /* visibility: visible; */
+/* } */
 
 /* .tab-row.active {
   background: #5e5c5c;
@@ -370,4 +370,25 @@ ul.themes li.theme {
 .light-theme .tab-row.active {
   background: #cdcbcb;
   font-weight: 600;
+}
+
+
+.groups {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.tab-group {
+  height: 20px;
+  min-width: 20px;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.75rem;
+  padding: 1px 6px;
+  cursor: pointer;
+  color: #fff;
 }
