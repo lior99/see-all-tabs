@@ -262,9 +262,9 @@ ul.themes li.theme {
   margin-bottom: 0;
 }
 
-.group > .group-title {
+.light-theme .group > .group-title {
   padding: 4px 10px;
-  color: #000;
+  color: #fff;
   background: #2e3a7abd;
   font-size: 0.9rem;
 }
@@ -367,9 +367,14 @@ ul.themes li.theme {
   background: #494949;
 }
 
+.light-theme {
+  background: #dee1e6ad;
+}
+
+
 .light-theme .tab-row.active {
-  background: #cdcbcb;
   font-weight: 600;
+  background: #fff;
 }
 
 

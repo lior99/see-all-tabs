@@ -1,12 +1,14 @@
 import {
-  INCOGNITO_IMAGE,
-  SPEAKER,
   ARROW_DOWN,
-  ARROW_UP,
-  ENTER_KEY,
+
+
   ARROW_LEFT,
-  ARROW_RIGHT,
-  groupColors
+  ARROW_RIGHT, ARROW_UP,
+  ENTER_KEY,
+
+
+  groupColors, INCOGNITO_IMAGE,
+  SPEAKER
 } from './consts.js';
 
 const App = (function() {
@@ -218,20 +220,28 @@ const App = (function() {
    */
   function displayListOfTabsInCurrentWindowOnly({ tabs, currentWindowId, tabGroup }) {
     const tabRowFragment = document.createDocumentFragment();
+    let groupParams = null;
 
-    tabs.forEach(tab => {
-      const params = getGroupData({ tabGroup, groupId: tab.groupId });
-
-      let groupParams = null;
-
-      if (params) {
-        const { collapsed, color, title } = params;
-        groupParams = { collapsed, color, title };
-      }
-
-      tabRowFragment.appendChild(buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams }));
-    });
-
+    // check if browser supports tab grouping
+    if (chrome.tabGroup) {
+      tabs.forEach(tab => {
+        const groups = getGroupData({ tabGroup, groupId: tab.groupId });
+  
+        let groupParams = null;
+  
+        if (groups) {
+          const { collapsed, color, title } = params;
+          groupParams = { collapsed, color, title };
+        }
+  
+        tabRowFragment.appendChild(buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams }));
+      });
+    } else {
+      tabs.forEach(tab => {
+        tabRowFragment.appendChild(buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams }));
+      });
+    }
+  
     return tabRowFragment;
   }
 
@@ -608,7 +618,7 @@ const App = (function() {
     );
 
     
-    const speakerSpan = tab.children[2].children[0];
+    const speakerSpan = tab.children[1].children[0];
     if (muted) {
       speakerSpan.classList.remove('volume-up');
       speakerSpan.classList.add('volume-mute');
