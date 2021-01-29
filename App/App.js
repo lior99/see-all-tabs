@@ -181,7 +181,9 @@ const App = (function() {
     const currentWindowId = await getCurrentWindow();
 
     if (showOnlyCurrentWindow) {
-      const domFragment = displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId, tabGroup })
+      const domFragment = await displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId, tabGroup });
+
+      console.log('%c ^^^^^^ domFragment', 'color: magenta; font-size: 30px', domFragment);
       tabListDomElement.appendChild(domFragment);
     } else {
       tabsList.sort((a, b) => {
@@ -190,16 +192,8 @@ const App = (function() {
 
       tabsList.forEach(async (chromeWindow, index) => {
         const tabRowFragment = document.createDocumentFragment();
-  
-        // chromeWindow.tabs.forEach(async tab => {
-        //   const tabRow = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: chromeWindow.tabs.length === 1 });
-        //   console.log('%ctab row in inner function', 'color: magenta; font-size: 30px', tabRow);
-        //   tabRowFragment.appendChild(tabRow);
-        //   console.log('%c tabRowFragment', 'color: hotpink; font-size: 30px', tabRowFragment);
-        // });
+        const tabRowsList = await createAllTabRowsAsync({ tabList: chromeWindow.tabs, currentWindowId });
 
-        const tabRowsList = await createAllTabRowsAsync({ tabList: chromeWindow.tabs });
-        console.log('%c tabRowsList', 'color: yellow; font-size: 30px', tabRowsList);
         tabRowsList.forEach(tabRow => tabRowFragment.appendChild(tabRow));
 
         if (tabsList.length > 1 && chromeWindow.tabs.length > 0) {
@@ -222,17 +216,20 @@ const App = (function() {
     }
   }
 
-  async function createAllTabRowsAsync({ tabList }) {
+  async function createAllTabRowsAsync({ tabList, currentWindowId }) {
+
+    console.log('%c @@@@ createAllTabRowsAsync --> ', 'color: magenta; font-size: 30px', { tabList, currentWindowId });
+
+
+
     return new Promise(async (resolve, reject) => {
       try {
         const tabsPromises = await tabList.map(async tab => {
           const tabRow = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabList.length === 1 });
-          console.log('%c createAllTabRowsAsync -> tabRow ', 'color: hotpink; font-size: 30px', tabRow);
           return tabRow;
         });
 
         const tabs = await Promise.all(tabsPromises);
-        console.log('%c @@@@ tabs', 'color: magenta; font-size: 30px', tabs);
 
         resolve(tabs);
       } catch(error) {
@@ -246,19 +243,12 @@ const App = (function() {
    * @param {array} tabs - all tabs in the window that invoked the extension
    * @param {number} currentWindowId - current window id
    */
-  function displayListOfTabsInCurrentWindowOnly({ tabs, currentWindowId, tabGroup }) {
-
-    console.log('%c #######', 'color: magenta; font-size: 30px', );
-
+  async function displayListOfTabsInCurrentWindowOnly({ tabs, currentWindowId, tabGroup }) {
     const tabRowFragment = document.createDocumentFragment();
     let groupParams = null;
-
     
     // check if browser supports tab grouping
     if (chrome.tabGroups) {
-      
-      console.log('%c support', 'color: pink; font-size: 40px', chrome.tabGroups);
-
       tabs.forEach(tab => {
         const groups = getGroupData({ tabGroup, groupId: tab.groupId });
   
@@ -272,9 +262,8 @@ const App = (function() {
         tabRowFragment.appendChild(buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams }));
       });
     } else {
-      tabs.forEach(tab => {
-        tabRowFragment.appendChild(buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams }));
-      });
+      const tabList = await createAllTabRowsAsync({ tabList: tabs, currentWindowId });
+      tabList.forEach(tab => tabRowFragment.appendChild(tab));
     }
   
     return tabRowFragment;
@@ -360,6 +349,8 @@ const App = (function() {
    */
   async function buildTabRow({ tab, currentWindowId, onlyTabInWindow, groupParams }) {
     const active = tab.active && tab.windowId === currentWindowId && !onlyTabInWindow ? 'active' : '';
+
+    console.log('%c @@@@ params', 'color: hotpink; font-size: 30px', { tab, currentWindowId, onlyTabInWindow, groupParams });
 
     const tabRow = document.createElement('div');
     tabRow.className = `tab-row ${active}`;
