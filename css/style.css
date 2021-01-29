@@ -153,7 +153,7 @@ ul.themes li.theme {
 
 .place-holder {
   height: 43px;
-  width: 10px;
+  width: 5px;
 }
 
 /*
@@ -380,9 +380,10 @@ ul.themes li.theme {
 
 .groups {
   display: flex;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   align-items: center;
   margin-bottom: 10px;
+  padding: 0 10px;
 }
 
 .tab-group {
@@ -396,4 +397,5 @@ ul.themes li.theme {
   padding: 1px 6px;
   cursor: pointer;
   color: #fff;
+  margin-right: 10px;
 }
