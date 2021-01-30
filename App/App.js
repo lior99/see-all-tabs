@@ -159,7 +159,7 @@ const App = (function() {
         chrome.tabGroups.update(groupId, {
           collapsed: !collapsed
         }, function(tabGroup){
-          console.log('tabGroup', tabGroup)
+          // console.log('tabGroup', tabGroup)
         })
       });
     }
@@ -183,7 +183,6 @@ const App = (function() {
     if (showOnlyCurrentWindow) {
       const domFragment = await displayListOfTabsInCurrentWindowOnly({ tabs: tabsList, currentWindowId, tabGroup });
 
-      console.log('%c ^^^^^^ domFragment', 'color: magenta; font-size: 30px', domFragment);
       tabListDomElement.appendChild(domFragment);
     } else {
       tabsList.sort((a, b) => {
@@ -209,19 +208,12 @@ const App = (function() {
   
         } else {
           tabListDomElement.appendChild(tabRowFragment);
-          
-          console.log('%c @@@@ tabListDomElement', 'color: magenta; font-size: 30px', tabListDomElement);
         }
       });
     }
   }
 
   async function createAllTabRowsAsync({ tabList, currentWindowId }) {
-
-    console.log('%c @@@@ createAllTabRowsAsync --> ', 'color: magenta; font-size: 30px', { tabList, currentWindowId });
-
-
-
     return new Promise(async (resolve, reject) => {
       try {
         const tabsPromises = await tabList.map(async tab => {
@@ -349,8 +341,6 @@ const App = (function() {
    */
   async function buildTabRow({ tab, currentWindowId, onlyTabInWindow, groupParams }) {
     const active = tab.active && tab.windowId === currentWindowId && !onlyTabInWindow ? 'active' : '';
-
-    console.log('%c @@@@ params', 'color: hotpink; font-size: 30px', { tab, currentWindowId, onlyTabInWindow, groupParams });
 
     const tabRow = document.createElement('div');
     tabRow.className = `tab-row ${active}`;

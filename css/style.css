@@ -172,17 +172,17 @@ ul.themes li.theme {
   width: 1rem;
 }
 
-.close-button::after{
+.close-button::after {
   content: url('../images/svg/times-circle.svg');
 }
 
-.black-theme .close-button::after{
+.black-theme .close-button::after {
   content: url('../images/svg/times-circle.svg');
   filter: invert(1);
   -webkit-filter: invert(1);
 }
 
-.dark-theme .close-button::after{
+.dark-theme .close-button::after {
   content: url('../images/svg/times-circle.svg');
   filter: invert(1);
   -webkit-filter: invert(1);
