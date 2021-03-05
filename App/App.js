@@ -240,30 +240,34 @@ const App = (function() {
     let groupParams = null;
 
     // check if browser supports tab grouping
-    if (chrome.tabGroups) {
-      tabs.forEach(async tab => {
-        const groups = getGroupData({ tabGroup, groupId: tab.groupId });
+    // if (chrome.tabGroups) {
+    //   tabs.forEach(async tab => {
+    //     const groups = getGroupData({ tabGroup, groupId: tab.groupId });
   
-        let groupParams = null;
+    //     let groupParams = null;
   
-        if (groups) {
-          const { collapsed, color, title } = params;
-          groupParams = { collapsed, color, title };
-        }
+    //     if (groups) {
+    //       const { collapsed, color, title } = params;
+    //       groupParams = { collapsed, color, title };
+    //     }
   
-        const tabRow = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams });
+    //     const tabRow = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams });
 
-        tabRowFragment.appendChild(tabRow);
-      });
-    } else {
+    //     tabRowFragment.appendChild(tabRow);
+    //   });
+    // } else {
       const tabList = await createAllTabRowsAsync({ tabList: tabs, currentWindowId });
+
+      console.log('%c tabList', 'font-size: 28px; color: yellow', tabList);
       tabList.forEach(tab => tabRowFragment.appendChild(tab));
-    }
+    // }
   
     return tabRowFragment;
   }
 
   function getGroupData({ tabGroup, groupId }) {
+    console.log('%c params', 'font-size: 30px; color: yellow', {tabGroup, groupId});
+
     const tabGroupItem = tabGroup.filter(group => group.id === groupId);
 
     if (tabGroupItem.length > 0) {
