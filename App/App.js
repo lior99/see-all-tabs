@@ -29,18 +29,18 @@ const App = (function() {
 
     showOnlyCurrentWindow = onlyCurrentWindow;
 
-    const tabGroup = await getTabsGroups();
+    // const tabGroup = await getTabsGroups();   
 
-    if (tabGroup) {
-      setGroupsIcons(tabGroup);
-    }
+    // if (tabGroup) {
+    //   setGroupsIcons(tabGroup);
+    // }
 
     registerEvents();
     listOfTabs = await getTabsList(showOnlyCurrentWindow);
 
     setTheme(name);
 
-    displayList({ tabsList: listOfTabs, tabGroup });
+    displayList({ tabsList: listOfTabs, tabGroup: [] });
     document.querySelector('.filterBox').focus();
     tabsCount = calcTabsCount({ groupOfTabs: listOfTabs });
   }
@@ -238,10 +238,10 @@ const App = (function() {
   async function displayListOfTabsInCurrentWindowOnly({ tabs, currentWindowId, tabGroup }) {
     const tabRowFragment = document.createDocumentFragment();
     let groupParams = null;
-    
+
     // check if browser supports tab grouping
     if (chrome.tabGroups) {
-      tabs.forEach(tab => {
+      tabs.forEach(async tab => {
         const groups = getGroupData({ tabGroup, groupId: tab.groupId });
   
         let groupParams = null;
@@ -251,7 +251,9 @@ const App = (function() {
           groupParams = { collapsed, color, title };
         }
   
-        tabRowFragment.appendChild(buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams }));
+        const tabRow = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams });
+
+        tabRowFragment.appendChild(tabRow);
       });
     } else {
       const tabList = await createAllTabRowsAsync({ tabList: tabs, currentWindowId });
@@ -347,25 +349,26 @@ const App = (function() {
     tabRow.dataset.tabId = tab.id;
     tabRow.dataset.windowId = tab.windowId;
 
-    if (chrome.tabGroups) {
-        const { groupId } = tab; 
+    // if (false && chrome.tabGroups) {
+    //     const { groupId } = tab; 
 
-        if (groupId > 0) {
-          const { tabColor, id } = await (() => {
-            return new Promise(resolve => {
-              chrome.tabGroups.get(groupId, tabGroupParams => {
-                const { color, id } = tabGroupParams;
-                const tabColor = groupColors[color];
-                resolve({ tabColor, id })
-              });
-            })
-          })();
+    //     if (groupId > 0) {
+    //       const { tabColor, id, collapsed, title } = await (() => {
+    //         return new Promise(resolve => {
+    //           chrome.tabGroups.get(groupId, tabGroupParams => {
+    //             const { color } = tabGroupParams;
+    //             const tabColor = groupColors[color];
+    //             resolve(tabGroupParams)
+    //           });
+    //         })
+    //       })();
 
-          const activePlaceHolder = createTabGroupPlaceHolder({ tabColor, id });
-          tabRow.appendChild(activePlaceHolder);
-        }
-    }
-   
+    //       const activePlaceHolder = createTabGroupPlaceHolder({ tabColor, id });
+
+    //       tabRow.appendChild(activePlaceHolder);
+    //     }
+    // }
+
     const favIcon = createFavIcon({ tab });
     tabRow.appendChild(favIcon);
 
@@ -378,6 +381,16 @@ const App = (function() {
     return tabRow;
   }
 
+  function createTabContainer(params) {
+    const { color, title } = params;
+
+    const tab = document.createElement('div');
+
+    tab.style.background = color;
+    tab.textContent = title; 
+
+    return tab;
+  }
 
   /**
    * Create a box to display active indicator
@@ -386,7 +399,6 @@ const App = (function() {
     const placeHolder = document.createElement('div');
     placeHolder.className = 'place-holder';
     placeHolder.style.background = tabColor;
-    // placeHolder.dataset.group = 'dummy'; // TODO: please refactor this 
     
     return placeHolder;
   }

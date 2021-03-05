@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "List All Tabs",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "show a list of all open tabs",
   "short_name": "List All Tabs",
   "author": "Lior Shtivelman",
@@ -17,5 +17,15 @@
   },
   "icons": {
     "128": "icon_128.png"
+  },
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+U",
+        "linux": "Ctrl+Shift+U",
+        "windows": "Alt+Shift+U",
+        "mac": "Ctrl+Shift+U"
+      }
+    }
   }
 }
