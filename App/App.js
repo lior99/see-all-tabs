@@ -258,7 +258,6 @@ const App = (function() {
     // } else {
       const tabList = await createAllTabRowsAsync({ tabList: tabs, currentWindowId });
 
-      console.log('%c tabList', 'font-size: 28px; color: yellow', tabList);
       tabList.forEach(tab => tabRowFragment.appendChild(tab));
     // }
   
@@ -266,8 +265,6 @@ const App = (function() {
   }
 
   function getGroupData({ tabGroup, groupId }) {
-    console.log('%c params', 'font-size: 30px; color: yellow', {tabGroup, groupId});
-
     const tabGroupItem = tabGroup.filter(group => group.id === groupId);
 
     if (tabGroupItem.length > 0) {
