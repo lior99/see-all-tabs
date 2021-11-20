@@ -8,7 +8,7 @@ import {
   SPEAKER
 } from './consts.js';
 
-const App = (function() {
+const App = (function () {
   let currentWindowId = null;
   let windowCounter = 0;
   let listOfTabs = [];
@@ -29,7 +29,7 @@ const App = (function() {
 
     showOnlyCurrentWindow = onlyCurrentWindow;
 
-    // const tabGroup = await getTabsGroups();   
+    const tabGroup = await getTabsGroups();
 
     // if (tabGroup) {
     //   setGroupsIcons(tabGroup);
@@ -40,7 +40,7 @@ const App = (function() {
 
     setTheme(name);
 
-    displayList({ tabsList: listOfTabs, tabGroup: [] });
+    displayList({ tabsList: listOfTabs, tabGroup });
     document.querySelector('.filterBox').focus();
     tabsCount = calcTabsCount({ groupOfTabs: listOfTabs });
   }
@@ -51,7 +51,7 @@ const App = (function() {
       div.className = 'tab-group';
       div.style.background = groupColors[group.color];
       div.textContent = group.title;
-      div.dataset.collapsed = group.collapsed; 
+      div.dataset.collapsed = group.collapsed;
       div.dataset.id = group.id;
       div.dataset.type = 'group';
 
@@ -60,30 +60,50 @@ const App = (function() {
   }
 
   function setTheme(selectedTheme) {
-    switch(selectedTheme) {
-      case 'light':
-        document.body.classList.remove('dark-mode');
-        document.body.classList.remove('black-theme');
-        document.body.classList.add('light-theme');
-
-        break;
-      case 'black':
-        document.body.classList.add('black-theme');
-        document.body.classList.remove('dark-mode');
-        document.body.classList.remove('light-theme');
-        break;
-      case 'dark':
-        document.body.classList.add('dark-theme');
-        document.body.classList.remove('black-theme');
-        document.body.classList.remove('light-theme');
+    switch (selectedTheme) {
+      case 'auto': {
+        //if dark mode enabled
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          setDarkTheme();
+        } else {
+          setLightTheme();
+        }
         break;
       }
+      case 'light':
+        setLightTheme();
+        break;
+      case 'black':
+        setBlackTheme();
+        break;
+      case 'dark':
+        setDarkTheme();
+        break;
+    }
+  }
+
+  function setLightTheme() {
+    document.body.classList.remove('dark-mode');
+    document.body.classList.remove('black-theme');
+    document.body.classList.add('light-theme');
+  }
+
+  function setDarkTheme() {
+    document.body.classList.add('dark-theme');
+    document.body.classList.remove('black-theme');
+    document.body.classList.remove('light-theme');
+  }
+
+  function setBlackTheme() {
+    document.body.classList.add('black-theme');
+    document.body.classList.remove('dark-mode');
+    document.body.classList.remove('light-theme');
   }
 
   function getTabsGroups() {
     if (chrome.tabGroups) {
       return new Promise(resolve => {
-        chrome.tabGroups.query({}, function(tabGroup){
+        chrome.tabGroups.query({}, function (tabGroup) {
           resolve(tabGroup);
         });
       });
@@ -110,7 +130,7 @@ const App = (function() {
           chrome.tabs.query(queryinfo, tabs => {
             resolve(tabs);
           })
-        });  
+        });
       } else {
         chrome.windows.getAll({ populate: true }, listOfWindows => {
           resolve(listOfWindows);
@@ -158,7 +178,7 @@ const App = (function() {
 
         chrome.tabGroups.update(groupId, {
           collapsed: !collapsed
-        }, function(tabGroup){
+        }, function (tabGroup) {
           // console.log('tabGroup', tabGroup)
         })
       });
@@ -196,16 +216,16 @@ const App = (function() {
         tabRowsList.forEach(tabRow => tabRowFragment.appendChild(tabRow));
 
         if (tabsList.length > 1 && chromeWindow.tabs.length > 0) {
-            const group = buildWindowsGroup({
-              chromeWindow,
-              tabRowFragment,
-              windowIndex: index + 1,
-              windowId: window.id,
-              isCurrentWindow: chromeWindow.id === currentWindowId
-            });
-          
-            tabListDomElement.appendChild(group);
-  
+          const group = buildWindowsGroup({
+            chromeWindow,
+            tabRowFragment,
+            windowIndex: index + 1,
+            windowId: window.id,
+            isCurrentWindow: chromeWindow.id === currentWindowId
+          });
+
+          tabListDomElement.appendChild(group);
+
         } else {
           tabListDomElement.appendChild(tabRowFragment);
         }
@@ -224,10 +244,44 @@ const App = (function() {
         const tabs = await Promise.all(tabsPromises);
 
         resolve(tabs);
-      } catch(error) {
+      } catch (error) {
         reject(error);
       }
     })
+  }
+
+
+  async function createGroupOfTabs(allTabsWithGroups, tabGroup) {
+    const groupsVisited = [];
+    const collectionOfTabs = [];
+
+    const getUniqueGroups = new Set(allTabsWithGroups.map(el => el.groupId));
+
+    getUniqueGroups.forEach(async groupId => {
+      if (groupsVisited.indexOf(groupId) === -1) {
+        const groupedTabs = allTabsWithGroups.filter(tab => tab.groupId === groupId);
+        const group = await createGroup(groupedTabs, tabGroup, currentWindowId);
+        group.dataset.index = allTabsWithGroups[0].index;
+        collectionOfTabs.push(group);
+        groupsVisited.push(groupId);
+      }
+    });
+
+    return collectionOfTabs;
+  }
+
+  async function createUnGroupedTabs(tabs, currentWindowId) {
+    const unGroupedTabs = tabs.filter(tab => tab.groupId === -1);
+    const collectionOfTabs = [];
+
+    unGroupedTabs.forEach(async tab => {
+      const tabElement = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: true });
+      tabElement.dataset.index = tab.index;
+      console.log('tabElement', tabElement)
+      collectionOfTabs.push(tabElement);
+    });
+
+    return collectionOfTabs;
   }
 
   /**
@@ -236,32 +290,67 @@ const App = (function() {
    * @param {number} currentWindowId - current window id
    */
   async function displayListOfTabsInCurrentWindowOnly({ tabs, currentWindowId, tabGroup }) {
-    const tabRowFragment = document.createDocumentFragment();
+    const tabRowFragment = document.createElement('div');
     let groupParams = null;
+    let tabsIds = [];
+    const collectionOfTabs = [];
 
-    // check if browser supports tab grouping
-    // if (chrome.tabGroups) {
-    //   tabs.forEach(async tab => {
-    //     const groups = getGroupData({ tabGroup, groupId: tab.groupId });
-  
-    //     let groupParams = null;
-  
-    //     if (groups) {
-    //       const { collapsed, color, title } = params;
-    //       groupParams = { collapsed, color, title };
-    //     }
-  
-    //     const tabRow = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams });
+    // 1. get all groups and generate tabs for them
+    // 2. generate all tabs not in groups
+    // 3. sort by index
 
-    //     tabRowFragment.appendChild(tabRow);
-    //   });
-    // } else {
-      const tabList = await createAllTabRowsAsync({ tabList: tabs, currentWindowId });
+    const allTabsWithGroups = tabs.filter(tab => tab.groupId !== -1);
+    const groupsVisited = [];
 
-      tabList.forEach(tab => tabRowFragment.appendChild(tab));
-    // }
-  
-    return tabRowFragment;
+    const groupsOfTabs = await createGroupOfTabs(allTabsWithGroups, tabGroup);
+    collectionOfTabs.push(...groupsOfTabs);
+
+    const unGroupedTabs = await createUnGroupedTabs(tabs, currentWindowId);
+    collectionOfTabs.push(...unGroupedTabs);
+
+    // sort by index
+    const sortedTabList = collectionOfTabs.sort((a, b) => {
+      const aIndex = parseInt(a.dataset.index);
+      const bIndex = parseInt(b.dataset.index);
+
+      return aIndex < bIndex ? -1 : (aIndex > bIndex ? 1 : 0);
+    });
+
+    sortedTabList.forEach(item => console.log(item.dataset.index));
+    const fragment = document.createDocumentFragment();
+    sortedTabList.forEach(el => fragment.appendChild(el));
+
+    return fragment;
+  }
+
+  async function createGroup(tabs, tabsGroups, currentWindowId) {
+    const groupDiv = document.createElement('div');
+
+    const group = tabsGroups.filter(group => group.id === tabs[0].groupId)[0];
+
+    const { title, color } = group;
+    const groupName = document.createElement('div');
+    groupName.className = 'tab-group';
+    groupName.textContent = title;
+    groupName.style.background = color;
+    groupDiv.appendChild(groupName);
+
+    tabs.forEach(async tab => {
+      const t = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: true });
+      t.style.borderLeft = `solid 6px ${color}`;
+      groupDiv.appendChild(t);
+    });
+
+    return groupDiv;
+  }
+
+
+  function createGroupForTabs(allTabs, groupId) {
+    const groupOfTabs = allTabs.filter(tab => tab.groupId === groupId);
+
+    const groupTitle = document.createElement('div');
+    groupTitle.textContent = '';
+
   }
 
   function getGroupData({ tabGroup, groupId }) {
@@ -272,7 +361,7 @@ const App = (function() {
       return {
         collapsed,
         color,
-        title 
+        title
       }
     } else {
       return null;
@@ -350,26 +439,6 @@ const App = (function() {
     tabRow.dataset.tabId = tab.id;
     tabRow.dataset.windowId = tab.windowId;
 
-    // if (false && chrome.tabGroups) {
-    //     const { groupId } = tab; 
-
-    //     if (groupId > 0) {
-    //       const { tabColor, id, collapsed, title } = await (() => {
-    //         return new Promise(resolve => {
-    //           chrome.tabGroups.get(groupId, tabGroupParams => {
-    //             const { color } = tabGroupParams;
-    //             const tabColor = groupColors[color];
-    //             resolve(tabGroupParams)
-    //           });
-    //         })
-    //       })();
-
-    //       const activePlaceHolder = createTabGroupPlaceHolder({ tabColor, id });
-
-    //       tabRow.appendChild(activePlaceHolder);
-    //     }
-    // }
-
     const favIcon = createFavIcon({ tab });
     tabRow.appendChild(favIcon);
 
@@ -388,7 +457,7 @@ const App = (function() {
     const tab = document.createElement('div');
 
     tab.style.background = color;
-    tab.textContent = title; 
+    tab.textContent = title;
 
     return tab;
   }
@@ -400,10 +469,9 @@ const App = (function() {
     const placeHolder = document.createElement('div');
     placeHolder.className = 'place-holder';
     placeHolder.style.background = tabColor;
-    
+
     return placeHolder;
   }
-
 
   /**
    * create a div containing the title of tab
@@ -446,7 +514,7 @@ const App = (function() {
     const closeButtonDiv = document.createElement('div');
     closeButtonDiv.className = 'close-button';
     closeButtonDiv.dataset.type = 'closeButton';
-   
+
     return closeButtonDiv;
   }
 
@@ -457,7 +525,7 @@ const App = (function() {
   function createSpeakerIcon(params) {
     const { tab } = params;
     const speakerSpan = document.createElement('span');
-    
+
     speakerSpan.className = `speaker ${tab.audible ? tab.mutedInfo.muted ? 'volume-mute' : 'volume-up' : ''}`;
     speakerSpan.dataset.type = SPEAKER.type;
 
@@ -471,7 +539,7 @@ const App = (function() {
     document.querySelector('.filterBox').value = '';
     const tabListElement = document.querySelector('.tab-list');
 
-    while(tabListElement.firstChild) {
+    while (tabListElement.firstChild) {
       tabListElement.removeChild(tabListElement.firstChild);
     }
 
@@ -543,7 +611,7 @@ const App = (function() {
    * @param {number} windowId - index of the window
    */
   function setActiveTab({ tabId, windowId }) {
-    chrome.windows.update(windowId, { focused: true }, function() {
+    chrome.windows.update(windowId, { focused: true }, function () {
       // selectedWindowId = windowId;
     });
 
@@ -598,12 +666,12 @@ const App = (function() {
       if (!Array.isArray(listOfTabs)) {
         listOfTabs = [listOfTabs];
       }
-  
+
       if (showOnlyCurrentWindow) {
-          const index = listOfTabs.findIndex(tab => tab.id === tabId);
-          if (index !== -1) {
-            listOfTabs.splice(index, 1)
-          }
+        const index = listOfTabs.findIndex(tab => tab.id === tabId);
+        if (index !== -1) {
+          listOfTabs.splice(index, 1)
+        }
       } else {
         listOfTabs.some(chromeWindow => {
           const index = chromeWindow.tabs.findIndex(tab => tab.id === tabId);
@@ -636,12 +704,12 @@ const App = (function() {
     } else {
       group.removeChild(tab);
       const children = [...group.children];
-      
+
       if (children.legnth > 0) {
         const hasTabs = children.some(htmlElement =>
           htmlElement.classList.contains('tab-row')
         );
-  
+
         if (!hasTabs) {
           document.querySelector('.tab-list').removeChild(group);
         }
@@ -660,7 +728,7 @@ const App = (function() {
       tab => parseInt(tab.dataset.tabId) === parseInt(tabId)
     );
 
-    
+
     const speakerSpan = tab.children[1].children[0];
     if (muted) {
       speakerSpan.classList.remove('volume-up');
@@ -713,7 +781,7 @@ const App = (function() {
           tab.title.toLowerCase().indexOf(valueToFilterBy) > -1 ||
           tab.url.toLowerCase().indexOf(valueToFilterBy) > -1
         );
-      });    
+      });
     } else {
       filteredList = listOfTabs.map(group => {
         const tabs = group.tabs.filter(tab => {
@@ -722,7 +790,7 @@ const App = (function() {
             tab.url.toLowerCase().indexOf(valueToFilterBy) > -1
           );
         });
-  
+
         return Object.assign({}, group, {
           tabs
         });
@@ -801,10 +869,10 @@ const App = (function() {
       return groupOfTabs.length;
     }
 
-    if(!Array.isArray(groupOfTabs)) {
+    if (!Array.isArray(groupOfTabs)) {
       groupOfTabs = [groupOfTabs]
     }
-    
+
     if (groupOfTabs.length === 1) {
       return groupOfTabs[0].tabs.length;
     }

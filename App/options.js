@@ -40,6 +40,7 @@ const optionsHandler = {
 
   handleUserOptionChange() {
     const selectedTheme = this.getSelectedTheme();
+    console.log('#### selected theme ####', selectedTheme);
     const onlyCurrentWindowInput = document.querySelector('#onlyCurrentWindow');
 
     const data = {

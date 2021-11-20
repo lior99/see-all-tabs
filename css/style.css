@@ -397,5 +397,6 @@ ul.themes li.theme {
   padding: 1px 6px;
   cursor: pointer;
   color: #fff;
-  margin-right: 10px;
+  width: 200px;
+  border-bottom-left-radius: 0;
 }
