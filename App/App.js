@@ -45,19 +45,21 @@ const App = (function () {
     tabsCount = calcTabsCount({ groupOfTabs: listOfTabs });
   }
 
-  function setGroupsIcons(groups) {
-    groups.forEach(group => {
-      const div = document.createElement('div');
-      div.className = 'tab-group';
-      div.style.background = groupColors[group.color];
-      div.textContent = group.title;
-      div.dataset.collapsed = group.collapsed;
-      div.dataset.id = group.id;
-      div.dataset.type = 'group';
+  //#region - remove this is not needed!!!
+  // function setGroupsIcons(groups) {
+  //   groups.forEach(group => {
+  //     const div = document.createElement('div');
+  //     div.className = 'tab-group';
+  //     div.style.background = groupColors[group.color];
+  //     div.textContent = group.title;
+  //     div.dataset.collapsed = group.collapsed;
+  //     div.dataset.id = group.id;
+  //     div.dataset.type = 'group';
 
-      document.querySelector('#groups').appendChild(div);
-    });
-  }
+  //     document.querySelector('#groups').appendChild(div);
+  //   });
+  // }
+  //#endregion
 
   function setTheme(selectedTheme) {
     switch (selectedTheme) {
@@ -147,13 +149,10 @@ const App = (function () {
   function registerEvents() {
     const tabList = document.querySelector('.tab-list');
     const filterBox = document.querySelector('.filterBox');
-    const groups = document.querySelector('#groups');
 
     tabList.addEventListener('click', onTabListClick);
     tabList.addEventListener('mousedown', onMouseDown);
     filterBox.addEventListener('keyup', filterTabs);
-
-    groups.addEventListener('click', onTabGroupClick);
 
     document
       .querySelector('.remove-filter')
@@ -166,24 +165,40 @@ const App = (function () {
       .addEventListener('mousemove', onMouseMove);
   }
 
-  function onTabGroupClick(event) {
-    const { target } = event;
-    if (target.dataset.type === 'group') {
-      let { id: groupId } = target.dataset;
+  function toggleGroupVisibility(target) {
+    const groupElement = target.parentNode;
 
-      groupId = parseInt(groupId);
+    const { open = true } = target.dataset;
 
-      chrome.tabGroups.get(groupId, tabGroup => {
-        const { collapsed } = tabGroup;
-
-        chrome.tabGroups.update(groupId, {
-          collapsed: !collapsed
-        }, function (tabGroup) {
-          // console.log('tabGroup', tabGroup)
-        })
-      });
+    if (open) {
+      // hide children
+      target.childNodes.forEach(el => el.style.display = 'none');
+    } else {
+      // show children
+      target.childNodes.forEach(el => el.style.display = 'block');
     }
+
+    target.dataset.open = !open;
   }
+
+  // function onTabGroupClick(event) {
+  //   const { target } = event;
+  //   if (target.dataset.type === 'group') {
+  //     let { id: groupId } = target.dataset;
+
+  //     groupId = parseInt(groupId);
+
+  //     chrome.tabGroups.get(groupId, tabGroup => {
+  //       const { collapsed } = tabGroup;
+
+  //       chrome.tabGroups.update(groupId, {
+  //         collapsed: !collapsed
+  //       }, function (tabGroup) {
+  //         // console.log('tabGroup', tabGroup)
+  //       })
+  //     });
+  //   }
+  // }
 
   /**
    * onmouse move handle for the body
@@ -325,6 +340,8 @@ const App = (function () {
 
   async function createGroup(tabs, tabsGroups, currentWindowId) {
     const groupDiv = document.createElement('div');
+    groupDiv.className = 'group-container';
+    groupDiv.dataset.open = true;
 
     const group = tabsGroups.filter(group => group.id === tabs[0].groupId)[0];
 
@@ -333,11 +350,14 @@ const App = (function () {
     groupName.className = 'tab-group';
     groupName.textContent = title;
     groupName.style.background = color;
+    groupName.dataset.type = 'group';
+    groupDiv.style.borderBottom = `solid 6px ${color}`;
     groupDiv.appendChild(groupName);
-
+    
     tabs.forEach(async tab => {
       const t = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: true });
       t.style.borderLeft = `solid 6px ${color}`;
+      t.style.borderRight = `solid 6px ${color}`;
       groupDiv.appendChild(t);
     });
 
@@ -572,6 +592,11 @@ const App = (function () {
    * @param {event} event - onClick event
    */
   function onTabListClick(event) {
+    if (event.target.dataset.type === 'group') {
+      toggleGroupVisibility(event.target.parentNode);
+      return;
+    }
+
     const { tabId, windowId } = getTabData(event);
     const tagName = event.target.tagName.toLowerCase();
     const type = event.target.dataset.type;
@@ -591,6 +616,7 @@ const App = (function () {
       }
       setActiveTab({ tabId, windowId });
     }
+
   }
 
   /**
@@ -647,8 +673,12 @@ const App = (function () {
       elementType !== 'div' ||
       (elementType === 'div' && !currentElement.classList.contains('tab-row'))
     ) {
-      currentElement = currentElement.parentNode;
-      elementType = currentElement.tagName.toLowerCase();
+        if (currentElement.parentNode.tagName.toLowerCase() === 'body') {
+          break;
+        }
+
+        currentElement = currentElement.parentNode;
+        elementType = currentElement.tagName.toLowerCase();
     }
 
     return {

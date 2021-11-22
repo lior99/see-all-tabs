@@ -391,12 +391,13 @@ ul.themes li.theme {
   min-width: 20px;
   border-radius: 5px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   font-size: 0.75rem;
-  padding: 1px 6px;
+  padding: 3px 10px;
   cursor: pointer;
   color: #fff;
-  width: 200px;
+  /* width: 200px; */
   border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
