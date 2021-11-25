@@ -2,9 +2,7 @@ import {
   ARROW_DOWN,
   ARROW_LEFT,
   ARROW_RIGHT, ARROW_UP,
-  ENTER_KEY,
-  groupColors,
-  INCOGNITO_IMAGE,
+  ENTER_KEY, INCOGNITO_IMAGE,
   SPEAKER
 } from './consts.js';
 
@@ -165,40 +163,23 @@ const App = (function () {
       .addEventListener('mousemove', onMouseMove);
   }
 
-  function toggleGroupVisibility(target) {
-    const groupElement = target.parentNode;
+  async function toggleGroupVisibility(target) {
+    let { open = 'true', groupId } = target.dataset;
 
-    const { open = true } = target.dataset;
+    open = open === 'true' ? true : false; 
 
-    if (open) {
-      // hide children
-      target.childNodes.forEach(el => el.style.display = 'none');
-    } else {
-      // show children
-      target.childNodes.forEach(el => el.style.display = 'block');
+    const childNodes = [...target.childNodes].filter(el => !el.classList.contains('tab-group'));
+
+    childNodes
+        .forEach(el => el.style.display = open ? 'none' : 'flex');
+    
+    target.dataset.open = !open;
+    const updateProperties = {
+      collapsed: open
     }
 
-    target.dataset.open = !open;
+    chrome.tabGroups.update(parseInt(groupId), updateProperties)
   }
-
-  // function onTabGroupClick(event) {
-  //   const { target } = event;
-  //   if (target.dataset.type === 'group') {
-  //     let { id: groupId } = target.dataset;
-
-  //     groupId = parseInt(groupId);
-
-  //     chrome.tabGroups.get(groupId, tabGroup => {
-  //       const { collapsed } = tabGroup;
-
-  //       chrome.tabGroups.update(groupId, {
-  //         collapsed: !collapsed
-  //       }, function (tabGroup) {
-  //         // console.log('tabGroup', tabGroup)
-  //       })
-  //     });
-  //   }
-  // }
 
   /**
    * onmouse move handle for the body
@@ -292,7 +273,6 @@ const App = (function () {
     unGroupedTabs.forEach(async tab => {
       const tabElement = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: true });
       tabElement.dataset.index = tab.index;
-      console.log('tabElement', tabElement)
       collectionOfTabs.push(tabElement);
     });
 
@@ -331,7 +311,6 @@ const App = (function () {
       return aIndex < bIndex ? -1 : (aIndex > bIndex ? 1 : 0);
     });
 
-    sortedTabList.forEach(item => console.log(item.dataset.index));
     const fragment = document.createDocumentFragment();
     sortedTabList.forEach(el => fragment.appendChild(el));
 
@@ -339,11 +318,13 @@ const App = (function () {
   }
 
   async function createGroup(tabs, tabsGroups, currentWindowId) {
-    const groupDiv = document.createElement('div');
-    groupDiv.className = 'group-container';
-    groupDiv.dataset.open = true;
-
     const group = tabsGroups.filter(group => group.id === tabs[0].groupId)[0];
+    const { id, collapsed } = group;
+
+    const groupDiv = document.createElement('div');
+    groupDiv.className = `group-container ${group.collapsed ? 'collapsed' : ''}`;
+    groupDiv.dataset.open = !group.collapsed;
+    groupDiv.dataset.groupId = id;
 
     const { title, color } = group;
     const groupName = document.createElement('div');
@@ -353,6 +334,8 @@ const App = (function () {
     groupName.dataset.type = 'group';
     groupDiv.style.borderBottom = `solid 6px ${color}`;
     groupDiv.appendChild(groupName);
+
+    const isGroupCollapsed = group.collapsed;
     
     tabs.forEach(async tab => {
       const t = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: true });
