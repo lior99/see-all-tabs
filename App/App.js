@@ -332,15 +332,13 @@ const App = (function () {
     groupName.textContent = title;
     groupName.style.background = color;
     groupName.dataset.type = 'group';
-    groupDiv.style.borderBottom = `solid 6px ${color}`;
     groupDiv.appendChild(groupName);
 
     const isGroupCollapsed = group.collapsed;
     
     tabs.forEach(async tab => {
       const t = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: true });
-      t.style.borderLeft = `solid 6px ${color}`;
-      t.style.borderRight = `solid 6px ${color}`;
+      t.style.borderLeft = `solid 10px ${color}`;
       groupDiv.appendChild(t);
     });
 
