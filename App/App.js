@@ -17,6 +17,18 @@ const App = (function () {
   let showOnlyCurrentWindow; // = true;
   let eventCounter = 0;
 
+  const groupsColorsEnum = {
+    grey: '#bdc1c6',
+    blue: '#8ab4f8',
+    red: '#f28b82',
+    yellow: '#fdd663',
+    green: '#81c995',
+    pink: '#ff88cb',
+    purple: '#d7aefb',
+    cyan: '#78d9ec'
+  }
+
+
   /**
    * main entry point
    * */
@@ -207,7 +219,7 @@ const App = (function () {
 
       tabsList.forEach(async (chromeWindow, index) => {
         const tabRowFragment = document.createDocumentFragment();
-        const tabRowsList = await createAllTabRowsAsync({ tabList: chromeWindow.tabs, currentWindowId });
+        const tabRowsList = await createAllTabRows({ tabList: chromeWindow.tabs, currentWindowId });
 
         tabRowsList.forEach(tabRow => tabRowFragment.appendChild(tabRow));
 
@@ -229,7 +241,7 @@ const App = (function () {
     }
   }
 
-  async function createAllTabRowsAsync({ tabList, currentWindowId }) {
+  async function createAllTabRows({ tabList, currentWindowId }) {
     return new Promise(async (resolve, reject) => {
       try {
         const tabsPromises = await tabList.map(async tab => {
@@ -330,7 +342,7 @@ const App = (function () {
     const groupName = document.createElement('div');
     groupName.className = 'tab-group';
     groupName.textContent = title;
-    groupName.style.background = color;
+    groupName.style.background = groupsColorsEnum[color];
     groupName.dataset.type = 'group';
     groupDiv.appendChild(groupName);
 
@@ -338,7 +350,7 @@ const App = (function () {
     
     tabs.forEach(async tab => {
       const t = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: true });
-      t.style.borderLeft = `solid 10px ${color}`;
+      t.style.borderLeft = `solid 10px ${groupsColorsEnum[color]}`;
       groupDiv.appendChild(t);
     });
 

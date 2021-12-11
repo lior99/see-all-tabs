@@ -391,7 +391,7 @@ ul.themes li.theme {
   font-size: 0.85rem;
   padding: 8px 10px 5px 6px;
   cursor: pointer;
-  color: #fff;
+  color: #000;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
