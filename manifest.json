@@ -10,13 +10,13 @@
     "storage",
     "tabGroups"
   ],
-  "options_page": "options.html",
+  "options_page": "/src/html/options.html",
   "action": {
-    "default_icon": "images/dark_version.png",
-    "default_popup": "index.html"
+    "default_icon": "/src/images/dark_version.png",
+    "default_popup": "/src/html/index.html"
   },
   "icons": {
-    "128": "icon_128.png"
+    "128": "/assets/icon_128.png"
   },
   "commands": {
     "_execute_browser_action": {

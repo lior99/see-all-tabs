@@ -8,6 +8,8 @@ import {
   SPEAKER
 } from './consts.js';
 
+import { setTheme } from './theme-handler/index.js';
+
 const App = (function() {
   let currentWindowId = null;
   let windowCounter = 0;
@@ -27,6 +29,7 @@ const App = (function() {
     const { onlyCurrentWindow = true, theme = {} } = settings;
     const { name = 'dark' } = theme;
 
+    console.log('settings', settings);
     showOnlyCurrentWindow = onlyCurrentWindow;
 
     // const tabGroup = await getTabsGroups();   
@@ -59,26 +62,26 @@ const App = (function() {
     });
   }
 
-  function setTheme(selectedTheme) {
-    switch(selectedTheme) {
-      case 'light':
-        document.body.classList.remove('dark-mode');
-        document.body.classList.remove('black-theme');
-        document.body.classList.add('light-theme');
+  // function setTheme(selectedTheme) {
+  //   switch(selectedTheme) {
+  //     case 'light':
+  //       document.body.classList.remove('dark-mode');
+  //       document.body.classList.remove('black-theme');
+  //       document.body.classList.add('light-theme');
 
-        break;
-      case 'black':
-        document.body.classList.add('black-theme');
-        document.body.classList.remove('dark-mode');
-        document.body.classList.remove('light-theme');
-        break;
-      case 'dark':
-        document.body.classList.add('dark-theme');
-        document.body.classList.remove('black-theme');
-        document.body.classList.remove('light-theme');
-        break;
-      }
-  }
+  //       break;
+  //     case 'black':
+  //       document.body.classList.add('black-theme');
+  //       document.body.classList.remove('dark-mode');
+  //       document.body.classList.remove('light-theme');
+  //       break;
+  //     case 'dark':
+  //       document.body.classList.add('dark-theme');
+  //       document.body.classList.remove('black-theme');
+  //       document.body.classList.remove('light-theme');
+  //       break;
+  //     }
+  // }
 
   function getTabsGroups() {
     if (chrome.tabGroups) {
