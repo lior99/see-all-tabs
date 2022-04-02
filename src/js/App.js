@@ -9,8 +9,10 @@ import {
 } from './consts.js';
 
 import { setTheme } from './theme-handler/index.js';
+import * as eventsHandlers from './events/index.js';
+import { getTabsList } from './tabs/index.js';
 
-const App = (function() {
+const App = (function () {
   let currentWindowId = null;
   let windowCounter = 0;
   let listOfTabs = [];
@@ -28,6 +30,7 @@ const App = (function() {
   async function init({ settings }) {
     const { onlyCurrentWindow = true, theme = {} } = settings;
     const { name = 'dark' } = theme;
+    const { registerEvents } = eventsHandlers;
 
     console.log('settings', settings);
     showOnlyCurrentWindow = onlyCurrentWindow;
@@ -54,7 +57,7 @@ const App = (function() {
       div.className = 'tab-group';
       div.style.background = groupColors[group.color];
       div.textContent = group.title;
-      div.dataset.collapsed = group.collapsed; 
+      div.dataset.collapsed = group.collapsed;
       div.dataset.id = group.id;
       div.dataset.type = 'group';
 
@@ -62,117 +65,16 @@ const App = (function() {
     });
   }
 
-  // function setTheme(selectedTheme) {
-  //   switch(selectedTheme) {
-  //     case 'light':
-  //       document.body.classList.remove('dark-mode');
-  //       document.body.classList.remove('black-theme');
-  //       document.body.classList.add('light-theme');
-
-  //       break;
-  //     case 'black':
-  //       document.body.classList.add('black-theme');
-  //       document.body.classList.remove('dark-mode');
-  //       document.body.classList.remove('light-theme');
-  //       break;
-  //     case 'dark':
-  //       document.body.classList.add('dark-theme');
-  //       document.body.classList.remove('black-theme');
-  //       document.body.classList.remove('light-theme');
-  //       break;
-  //     }
-  // }
-
   function getTabsGroups() {
     if (chrome.tabGroups) {
       return new Promise(resolve => {
-        chrome.tabGroups.query({}, function(tabGroup){
+        chrome.tabGroups.query({}, function (tabGroup) {
           resolve(tabGroup);
         });
       });
     } else {
       return Promise.resolve(null);
     }
-  }
-
-  /**
-   * Get list of all open tabs using chrome's own getAll method
-   * */
-  function getTabsList(showOnlyCurrentWindow = false) {
-    return new Promise(resolve => {
-      if (showOnlyCurrentWindow) {
-        chrome.windows.getCurrent({ populate: true }, window => {
-          // chrome.tabs.getAllInWindow(window.id, tabs => {
-          //   resolve(tabs);
-          // })
-
-          const queryinfo = {
-            currentWindow: true,
-          };
-
-          chrome.tabs.query(queryinfo, tabs => {
-            resolve(tabs);
-          })
-        });  
-      } else {
-        chrome.windows.getAll({ populate: true }, listOfWindows => {
-          resolve(listOfWindows);
-        });
-      }
-    });
-  }
-
-  /**
-   * register to user events such as click, mousedown and handlign filter box and filter
-   * box clearance
-   *  */
-
-  function registerEvents() {
-    const tabList = document.querySelector('.tab-list');
-    const filterBox = document.querySelector('.filterBox');
-    const groups = document.querySelector('#groups');
-
-    tabList.addEventListener('click', onTabListClick);
-    tabList.addEventListener('mousedown', onMouseDown);
-    filterBox.addEventListener('keyup', filterTabs);
-
-    groups.addEventListener('click', onTabGroupClick);
-
-    document
-      .querySelector('.remove-filter')
-      .addEventListener('click', clearFilter);
-    document
-      .querySelector('body')
-      .addEventListener('keyup', onKeyboardButtonPress);
-    document
-      .querySelector('body')
-      .addEventListener('mousemove', onMouseMove);
-  }
-
-  function onTabGroupClick(event) {
-    const { target } = event;
-    if (target.dataset.type === 'group') {
-      let { id: groupId } = target.dataset;
-
-      groupId = parseInt(groupId);
-
-      chrome.tabGroups.get(groupId, tabGroup => {
-        const { collapsed } = tabGroup;
-
-        chrome.tabGroups.update(groupId, {
-          collapsed: !collapsed
-        }, function(tabGroup){
-          // console.log('tabGroup', tabGroup)
-        })
-      });
-    }
-  }
-
-  /**
-   * onmouse move handle for the body
-   */
-  function onMouseMove() {
-    setHightlitedTab({ set: false });
   }
 
   /**
@@ -199,16 +101,16 @@ const App = (function() {
         tabRowsList.forEach(tabRow => tabRowFragment.appendChild(tabRow));
 
         if (tabsList.length > 1 && chromeWindow.tabs.length > 0) {
-            const group = buildWindowsGroup({
-              chromeWindow,
-              tabRowFragment,
-              windowIndex: index + 1,
-              windowId: window.id,
-              isCurrentWindow: chromeWindow.id === currentWindowId
-            });
-          
-            tabListDomElement.appendChild(group);
-  
+          const group = buildWindowsGroup({
+            chromeWindow,
+            tabRowFragment,
+            windowIndex: index + 1,
+            windowId: window.id,
+            isCurrentWindow: chromeWindow.id === currentWindowId
+          });
+
+          tabListDomElement.appendChild(group);
+
         } else {
           tabListDomElement.appendChild(tabRowFragment);
         }
@@ -227,7 +129,7 @@ const App = (function() {
         const tabs = await Promise.all(tabsPromises);
 
         resolve(tabs);
-      } catch(error) {
+      } catch (error) {
         reject(error);
       }
     })
@@ -246,24 +148,24 @@ const App = (function() {
     // if (chrome.tabGroups) {
     //   tabs.forEach(async tab => {
     //     const groups = getGroupData({ tabGroup, groupId: tab.groupId });
-  
+
     //     let groupParams = null;
-  
+
     //     if (groups) {
     //       const { collapsed, color, title } = params;
     //       groupParams = { collapsed, color, title };
     //     }
-  
+
     //     const tabRow = await buildTabRow({ tab, currentWindowId, onlyTabInWindow: tabs.length === 1, groupParams });
 
     //     tabRowFragment.appendChild(tabRow);
     //   });
     // } else {
-      const tabList = await createAllTabRowsAsync({ tabList: tabs, currentWindowId });
+    const tabList = await createAllTabRowsAsync({ tabList: tabs, currentWindowId });
 
-      tabList.forEach(tab => tabRowFragment.appendChild(tab));
+    tabList.forEach(tab => tabRowFragment.appendChild(tab));
     // }
-  
+
     return tabRowFragment;
   }
 
@@ -275,7 +177,7 @@ const App = (function() {
       return {
         collapsed,
         color,
-        title 
+        title
       }
     } else {
       return null;
@@ -391,7 +293,7 @@ const App = (function() {
     const tab = document.createElement('div');
 
     tab.style.background = color;
-    tab.textContent = title; 
+    tab.textContent = title;
 
     return tab;
   }
@@ -403,10 +305,9 @@ const App = (function() {
     const placeHolder = document.createElement('div');
     placeHolder.className = 'place-holder';
     placeHolder.style.background = tabColor;
-    
+
     return placeHolder;
   }
-
 
   /**
    * create a div containing the title of tab
@@ -449,7 +350,7 @@ const App = (function() {
     const closeButtonDiv = document.createElement('div');
     closeButtonDiv.className = 'close-button';
     closeButtonDiv.dataset.type = 'closeButton';
-   
+
     return closeButtonDiv;
   }
 
@@ -460,72 +361,11 @@ const App = (function() {
   function createSpeakerIcon(params) {
     const { tab } = params;
     const speakerSpan = document.createElement('span');
-    
+
     speakerSpan.className = `speaker ${tab.audible ? tab.mutedInfo.muted ? 'volume-mute' : 'volume-up' : ''}`;
     speakerSpan.dataset.type = SPEAKER.type;
 
     return speakerSpan;
-  }
-
-  /**
-   * Removes filter on box and calling the display list to render the list again
-   */
-  function clearFilter() {
-    document.querySelector('.filterBox').value = '';
-    const tabListElement = document.querySelector('.tab-list');
-
-    while(tabListElement.firstChild) {
-      tabListElement.removeChild(tabListElement.firstChild);
-    }
-
-    displayList({ tabsList: listOfTabs });
-    isInFilterMode = false;
-  }
-
-  /**
-   * handle middle click button, closes the tab
-   * @param {event} event - mouse down event
-   */
-  function onMouseDown(event) {
-    event.stopImmediatePropagation();
-
-    const isMiddleButtonDown = event.button === 1;
-
-    if (isMiddleButtonDown) {
-      const { tabId } = getTabData(event);
-      if (!tabId) {
-        return;
-      }
-
-      removeTabFromList(tabId);
-      closeTab(tabId);
-    }
-  }
-
-  /**
-   * handle clicking on a tab row
-   * @param {event} event - onClick event
-   */
-  function onTabListClick(event) {
-    const { tabId, windowId } = getTabData(event);
-    const tagName = event.target.tagName.toLowerCase();
-    const type = event.target.dataset.type;
-
-    if (type === 'speaker') {
-      toggleMute(tabId);
-      return;
-    }
-
-    // if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
-    if (type === 'closeButton') {
-      removeTabFromList(tabId);
-      closeTab(tabId);
-    } else {
-      if (!tabId) {
-        return;
-      }
-      setActiveTab({ tabId, windowId });
-    }
   }
 
   /**
@@ -546,7 +386,7 @@ const App = (function() {
    * @param {number} windowId - index of the window
    */
   function setActiveTab({ tabId, windowId }) {
-    chrome.windows.update(windowId, { focused: true }, function() {
+    chrome.windows.update(windowId, { focused: true }, function () {
       // selectedWindowId = windowId;
     });
 
@@ -601,12 +441,12 @@ const App = (function() {
       if (!Array.isArray(listOfTabs)) {
         listOfTabs = [listOfTabs];
       }
-  
+
       if (showOnlyCurrentWindow) {
-          const index = listOfTabs.findIndex(tab => tab.id === tabId);
-          if (index !== -1) {
-            listOfTabs.splice(index, 1)
-          }
+        const index = listOfTabs.findIndex(tab => tab.id === tabId);
+        if (index !== -1) {
+          listOfTabs.splice(index, 1)
+        }
       } else {
         listOfTabs.some(chromeWindow => {
           const index = chromeWindow.tabs.findIndex(tab => tab.id === tabId);
@@ -639,12 +479,12 @@ const App = (function() {
     } else {
       group.removeChild(tab);
       const children = [...group.children];
-      
+
       if (children.legnth > 0) {
         const hasTabs = children.some(htmlElement =>
           htmlElement.classList.contains('tab-row')
         );
-  
+
         if (!hasTabs) {
           document.querySelector('.tab-list').removeChild(group);
         }
@@ -663,7 +503,7 @@ const App = (function() {
       tab => parseInt(tab.dataset.tabId) === parseInt(tabId)
     );
 
-    
+
     const speakerSpan = tab.children[1].children[0];
     if (muted) {
       speakerSpan.classList.remove('volume-up');
@@ -671,107 +511,6 @@ const App = (function() {
     } else {
       speakerSpan.classList.remove('volume-mute');
       speakerSpan.classList.add('volume-up');
-    }
-  }
-
-  /**
-   * Filter the tab list when writing in the filter box
-   * @param {event} event - keyboard event
-   */
-  function filterTabs(event) {
-    const { keyCode } = event;
-
-    if (
-      keyCode === ARROW_DOWN ||
-      keyCode === ARROW_UP ||
-      keyCode === ENTER_KEY ||
-      keyCode === ARROW_LEFT ||
-      keyCode === ARROW_RIGHT
-    ) {
-      return;
-    }
-
-    // clicking on the touchpad "middle click" fires 4 keyboard events
-    // so, I use this hack to prevent the filter which caused the list to duplicate itself 4 times
-    if (event.key === 'F22' || event.key === 'Shift' || event.key === 'Control' || event.key === 'Meta') {
-      eventCounter++;
-      return;
-    }
-
-    if (eventCounter === 3) {
-      eventCounter = 0;
-    }
-
-    const valueToFilterBy = event.target.value.toLowerCase();
-    if (valueToFilterBy.length === 0) {
-      clearFilter();
-      return;
-    }
-
-    let filteredList;
-
-    if (showOnlyCurrentWindow) {
-      filteredList = listOfTabs.filter(tab => {
-        return (
-          tab.title.toLowerCase().indexOf(valueToFilterBy) > -1 ||
-          tab.url.toLowerCase().indexOf(valueToFilterBy) > -1
-        );
-      });    
-    } else {
-      filteredList = listOfTabs.map(group => {
-        const tabs = group.tabs.filter(tab => {
-          return (
-            tab.title.toLowerCase().indexOf(valueToFilterBy) > -1 ||
-            tab.url.toLowerCase().indexOf(valueToFilterBy) > -1
-          );
-        });
-  
-        return Object.assign({}, group, {
-          tabs
-        });
-      });
-    }
-
-    displayFilteredList(filteredList);
-    highlightedTab = -1;
-    isInFilterMode = true;
-    filteredResultsLength = calcTabsCount({
-      groupOfTabs: filteredList
-    });
-  }
-
-  function onKeyboardButtonPress(event) {
-    const { keyCode } = event;
-
-    // check if up/down arrows and enter
-    if (
-      keyCode === ARROW_DOWN ||
-      keyCode === ARROW_UP ||
-      keyCode === ENTER_KEY
-    ) {
-      switch (keyCode) {
-        case ENTER_KEY: {
-          const { tabId, windowId } = document.querySelectorAll('.tab-row')[
-            highlightedTab
-          ].dataset;
-          const params = {
-            tabId: parseInt(tabId),
-            windowId: parseInt(windowId)
-          };
-
-          setActiveTab(params);
-          break;
-        }
-
-        case ARROW_UP: {
-          highlightPreviousTab();
-          break;
-        }
-        case ARROW_DOWN: {
-          highlightNextTab();
-          break;
-        }
-      }
     }
   }
 
@@ -804,10 +543,10 @@ const App = (function() {
       return groupOfTabs.length;
     }
 
-    if(!Array.isArray(groupOfTabs)) {
+    if (!Array.isArray(groupOfTabs)) {
       groupOfTabs = [groupOfTabs]
     }
-    
+
     if (groupOfTabs.length === 1) {
       return groupOfTabs[0].tabs.length;
     }
@@ -818,24 +557,6 @@ const App = (function() {
     }, total);
 
     return totalTabsNumber;
-  }
-
-  /**
-   * Set background color to a tab
-   * @param {boolean} set - indicates whether to highlight a tab or not
-   */
-  function setHightlitedTab({ set }) {
-    const tabRowsList = document.querySelectorAll('.tab-row');
-
-    tabRowsList.forEach(element => element.classList.remove('hightlighted'));
-
-    if (set) {
-      tabRowsList[highlightedTab].classList.add('hightlighted');
-      tabRowsList[highlightedTab].scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest'
-      });
-    }
   }
 
   /**
