@@ -1,13 +1,13 @@
 function registerEvents() {
     const tabList = document.querySelector('.tab-list');
     const filterBox = document.querySelector('.filterBox');
-    const groups = document.querySelector('#groups');
+    // const groups = document.querySelector('#groups');
 
     tabList.addEventListener('click', onTabListClick);
     tabList.addEventListener('mousedown', onMouseDown);
     filterBox.addEventListener('keyup', filterTabs);
 
-    groups.addEventListener('click', onTabGroupClick);
+    // groups.addEventListener('click', onTabGroupClick);
 
     document
         .querySelector('.remove-filter')
@@ -25,25 +25,28 @@ function registerEvents() {
 * @param {event} event - onClick event
 */
 function onTabListClick(event) {
-    const { tabId, windowId } = getTabData(event);
-    const tagName = event.target.tagName.toLowerCase();
-    const type = event.target.dataset.type;
+    // const { tabId, windowId } = getTabData(event);
+    // const tagName = event.target.tagName.toLowerCase();
+    // const type = event.target.dataset.type;
 
-    if (type === 'speaker') {
-        toggleMute(tabId);
-        return;
-    }
+    console.log('event.target', event.target);
+    console.log('event.target.parentNode', event.target.parentNode);
 
-    // if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
-    if (type === 'closeButton') {
-        removeTabFromList(tabId);
-        closeTab(tabId);
-    } else {
-        if (!tabId) {
-            return;
-        }
-        setActiveTab({ tabId, windowId });
-    }
+    // if (type === 'speaker') {
+    //     toggleMute(tabId);
+    //     return;
+    // }
+
+    // // if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
+    // if (type === 'closeButton') {
+    //     removeTabFromList(tabId);
+    //     closeTab(tabId);
+    // } else {
+    //     if (!tabId) {
+    //         return;
+    //     }
+    //     setActiveTab({ tabId, windowId });
+    // }
 }
 
 /**

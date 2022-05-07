@@ -399,3 +399,8 @@ ul.themes li.theme {
   color: #fff;
   margin-right: 10px;
 }
+
+span.group-name {
+  padding: 5px 10px;
+  color: #000;
+}

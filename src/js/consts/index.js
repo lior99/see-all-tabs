@@ -10,7 +10,7 @@ export const MUTED_SPEAKER = {
 	type: 'speaker',
 }
  
-export const  SPEAKER = {
+export const SPEAKER = {
 	src: '../images/icons8-Speaker-16.png',
 	alt: 'tab is playing',
 	type: 'speaker',
@@ -27,7 +27,7 @@ export const CLOSE_BUTTON = {
 	type: 'closeButton'
 }
 
-export const groupColors = {
+export const GROUP_COLORS = {
 	grey: '#5f6368',
 	blue: '#3374eb',
 	red: '#d02d1d',
