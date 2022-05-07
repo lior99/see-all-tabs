@@ -184,65 +184,9 @@ const App = (function () {
   //   };
   // }
 
-  // /**
-  //  * handle closing the tab
-  //  * @param {number} tabId - the tab the user clicked on closing
-  //  */
-  // function closeTab(tabId) {
-  //   chrome.tabs.remove(tabId, () => {
-  //     if (!Array.isArray(listOfTabs)) {
-  //       listOfTabs = [listOfTabs];
-  //     }
+  
 
-  //     if (showOnlyCurrentWindow) {
-  //       const index = listOfTabs.findIndex(tab => tab.id === tabId);
-  //       if (index !== -1) {
-  //         listOfTabs.splice(index, 1)
-  //       }
-  //     } else {
-  //       listOfTabs.some(chromeWindow => {
-  //         const index = chromeWindow.tabs.findIndex(tab => tab.id === tabId);
-  //         if (index !== -1) {
-  //           chromeWindow.tabs.splice(index, 1)
-  //           return;
-  //         }
-  //       })
-  //     }
-
-  //     tabsCount = calcTabsCount({ groupOfTabs: listOfTabs });
-  //   });
-
-  // }
-
-  // /**
-  //  * handler for clicking the close button, remove the div from the container
-  //  * @param {number} tabId - tab number
-  //  */
-  // function removeTabFromList(tabId) {
-  //   const list = [...document.querySelectorAll('.tab-row')];
-  //   const tab = list.find(
-  //     tab => parseInt(tab.dataset.tabId) === parseInt(tabId)
-  //   );
-
-  //   const group = tab.parentElement;
-
-  //   if (!group) {
-  //     document.querySelector('.tab-list').removeChild(tab);
-  //   } else {
-  //     group.removeChild(tab);
-  //     const children = [...group.children];
-
-  //     if (children.legnth > 0) {
-  //       const hasTabs = children.some(htmlElement =>
-  //         htmlElement.classList.contains('tab-row')
-  //       );
-
-  //       if (!hasTabs) {
-  //         document.querySelector('.tab-list').removeChild(group);
-  //       }
-  //     }
-  //   }
-  // }
+  
 
   // /**
   //  * Event handler for clicking on the speaker icon

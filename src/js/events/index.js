@@ -34,7 +34,7 @@ async function onTabListClick(event) {
     let tabRow;
     const { type } = target.dataset;
 
-    switch(className) {
+    switch (className) {
         case 'tab-desc':
         case 'speaker':
             tabRow = target.parentNode.parentNode;
@@ -45,8 +45,9 @@ async function onTabListClick(event) {
             tabRow = target.parentNode;
             break;
     }
-     
+
     const { tabId, windowId } = tabRow.dataset;
+    console.log('type', type)
 
     if (type === 'speaker') {
         toggleMute(tabId);
@@ -55,8 +56,7 @@ async function onTabListClick(event) {
 
     // // if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
     if (type === 'closeButton') {
-        removeTabFromList(tabId);
-        closeTab(tabId);
+        closeTab({ tabId: parseInt(tabId), tabRowDiv: tabRow });
         return;
     }
 
@@ -124,7 +124,7 @@ function onMouseDown(event) {
         }
 
         removeTabFromList(tabId);
-        closeTab(tabId);
+        closeTab(parseInt(tabId));
     }
 }
 
@@ -267,6 +267,59 @@ function setHightlitedTab({ set }) {
 */
 function onMouseMove() {
     setHightlitedTab({ set: false });
+}
+
+/**
+ * handler for clicking the close button, remove the div from the container
+ * @param {number} tabId - tab number
+ */
+function removeTabFromList(tabId) {
+    const list = [...document.querySelectorAll('.tab-row')];
+    const tab = list.find(
+        tab => parseInt(tab.dataset.tabId) === parseInt(tabId)
+    );
+
+    const group = tab.parentElement;
+
+    if (!group) {
+        document.querySelector('.tab-list').removeChild(tab);
+    } else {
+        group.removeChild(tab);
+        const children = [...group.children];
+
+        if (children.legnth > 0) {
+            const hasTabs = children.some(htmlElement =>
+                htmlElement.classList.contains('tab-row')
+            );
+
+            if (!hasTabs) {
+                document.querySelector('.tab-list').removeChild(group);
+            }
+        }
+    }
+}
+
+/**
+ * handle closing the tab
+ * @param {number} tabId - the tab the user clicked on closing
+ */
+function closeTab(params) {
+    const { tabId, tabRowDiv } = params;
+    chrome.tabs.remove(tabId, () => {
+        //if last tab in group - remove the group as well
+        if (tabRowDiv.parentElement.dataset?.type === 'group') {
+            const group = tabRowDiv.parentElement;
+            group.removeChild(tabRowDiv);
+
+            if (group.children.length === 1) {
+                document.querySelector('#tabList').removeChild(group);
+            }
+
+            return;
+        }
+
+        document.querySelector('#tabList').removeChild(tabRowDiv);
+    });
 }
 
 export {
