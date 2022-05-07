@@ -143,18 +143,7 @@ const App = (function () {
   //   });
   // }
 
-  // /**
-  //  * handle click on a tab name in the list
-  //  * @param {number} tabId - from chrome's tab data object. used to get the clicked tab
-  //  * @param {number} windowId - index of the window
-  //  */
-  // function setActiveTab({ tabId, windowId }) {
-  //   chrome.windows.update(windowId, { focused: true }, function () {
-  //     // selectedWindowId = windowId;
-  //   });
-
-  //   chrome.tabs.update(tabId, { active: true });
-  // }
+  
 
   // function unregisterEvents() {
   //   document

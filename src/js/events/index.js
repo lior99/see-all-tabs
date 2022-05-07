@@ -24,29 +24,65 @@ function registerEvents() {
 * handle clicking on a tab row
 * @param {event} event - onClick event
 */
-function onTabListClick(event) {
+async function onTabListClick(event) {
     // const { tabId, windowId } = getTabData(event);
     // const tagName = event.target.tagName.toLowerCase();
     // const type = event.target.dataset.type;
 
-    console.log('event.target', event.target);
-    console.log('event.target.parentNode', event.target.parentNode);
+    const { target } = event;
+    const { className } = target;
+    let tabRow;
+    const { type } = target.dataset;
 
-    // if (type === 'speaker') {
-    //     toggleMute(tabId);
-    //     return;
-    // }
+    switch(className) {
+        case 'tab-desc':
+        case 'speaker':
+            tabRow = target.parentNode.parentNode;
+            break;
+        case 'tab-title':
+        case 'favicon':
+        case 'close-button':
+            tabRow = target.parentNode;
+            break;
+    }
+     
+    const { tabId, windowId } = tabRow.dataset;
+
+    if (type === 'speaker') {
+        toggleMute(tabId);
+        return;
+    }
 
     // // if ((tagName === 'img' || tagName === 'div') && type === 'closeButton') {
-    // if (type === 'closeButton') {
-    //     removeTabFromList(tabId);
-    //     closeTab(tabId);
+    if (type === 'closeButton') {
+        removeTabFromList(tabId);
+        closeTab(tabId);
+        return;
+    }
+
+    await setActiveTab({ tabId, windowId });
+
     // } else {
     //     if (!tabId) {
     //         return;
     //     }
     //     setActiveTab({ tabId, windowId });
     // }
+}
+
+/**
+ * handle click on a tab name in the list
+ * @param {number} tabId - from chrome's tab data object. used to get the clicked tab
+ * @param {number} windowId - index of the window
+ */
+async function setActiveTab(params) {
+    const { tabId, windowId } = params;
+    console.log('params', params);
+    // chrome.windows.update(windowId, { focused: true }, function () {
+    //     // selectedWindowId = windowId;
+    // });
+
+    await chrome.tabs.update(parseInt(tabId), { active: true });
 }
 
 /**
